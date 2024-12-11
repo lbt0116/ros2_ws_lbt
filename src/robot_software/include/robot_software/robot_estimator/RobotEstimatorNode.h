@@ -1,0 +1,38 @@
+//
+// Created by lbt on 24-12-8.
+//
+
+#ifndef ROBOTESTIMATORNODE_H
+#define ROBOTESTIMATORNODE_H
+#include <memory> // 用于智能指针
+#include <Eigen/Dense>
+#include "robot_software/robot_utils/MatrixTypes.h"
+#include "robot_software/robot_interface/PinocchioInterface.h"
+#include "robot_software/robot_utils/UtilFunc.h"
+#include "robot_software/robot_estimator/ESKF_SE3_simple.h"
+#include "rclcpp/rclcpp.hpp"
+#include "custom_msgs/msg/actuator_cmds.hpp"
+#include "custom_msgs/msg/robot_state_msg.hpp"
+#include "sensor_msgs/msg/imu.hpp"
+#include "sensor_msgs/msg/joint_state.hpp"
+
+using namespace Eigen;
+
+namespace Galileo
+{
+    class RobotEstimatorNode : public rclcpp::Node
+    {
+    public:
+        RobotEstimatorNode(std::shared_ptr<PinocchioInterface> pinocchio_interface); //
+        ~RobotEstimatorNode() override = default;
+
+    private:
+        void pub_estimation_callback();
+
+        rclcpp::TimerBase::SharedPtr timer_;
+        rclcpp::Publisher<custom_msgs::msg::RobotStateMsg>::SharedPtr statePub_;
+        std::shared_ptr<PinocchioInterface> pinocchioInterface_;
+    };
+} // Galileo
+
+#endif //ROBOTESTIMATORNODE_H
