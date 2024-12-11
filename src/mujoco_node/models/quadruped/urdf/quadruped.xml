@@ -1,0 +1,205 @@
+<mujoco model="quadruped">
+    <compiler angle="radian" meshdir="../meshes/" autolimits="true"/>
+    <option timestep="0.001" integrator="RK4">
+        <!--		<flag sensornoise="enable" />-->
+    </option>
+
+    <visual>
+        <map force="0.1" zfar="30"/>
+        <rgba haze="0.15 0.25 0.35 1"/>
+        <global offwidth="2560" offheight="1440" elevation="-20" azimuth="120"/>
+    </visual>
+
+    <asset>
+        <texture type="skybox" builtin="gradient" rgb1=".3 .5 .7" rgb2="0 0 0" width="32" height="512"/>
+        <texture name="body" type="cube" builtin="flat" mark="cross" width="127" height="1278" rgb1="0.8 0.6 0.4"
+                 rgb2="0.8 0.6 0.4" markrgb="1 1 1" random="0.01"/>
+        <material name="body" texture="body" texuniform="true" rgba="0.8 0.6 .4 1"/>
+        <texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".1 .2 .3" rgb2=".2 .3 .4"/>
+        <material name="grid" texture="grid" texrepeat="1 1" texuniform="true" reflectance=".2"/>
+    </asset>
+
+    <asset>
+        <mesh name="base_link" file="base_link.STL"/>
+        <mesh name="Abd1Link" file="Abd1Link.STL"/>
+        <mesh name="Hip1Link" file="Hip1Link.STL"/>
+        <mesh name="Knee1Link" file="Knee1Link.STL"/>
+        <mesh name="toe1link" file="toe1Link.STL"/>
+        <mesh name="Abd2Link" file="Abd2Link.STL"/>
+        <mesh name="Hip2Link" file="Hip2Link.STL"/>
+        <mesh name="Knee2Link" file="Knee2Link.STL"/>
+        <mesh name="toe2Link" file="toe2Link.STL"/>
+        <mesh name="Abd3Link" file="Abd3Link.STL"/>
+        <mesh name="Hip3Link" file="Hip3Link.STL"/>
+        <mesh name="Knee3Link" file="Knee3Link.STL"/>
+        <mesh name="toe3Link" file="toe3Link.STL"/>
+        <mesh name="Abd4Link" file="Abd4Link.STL"/>
+        <mesh name="Hip4Link" file="Hip4Link.STL"/>
+        <mesh name="Knee4Link" file="Knee4Link.STL"/>
+        <mesh name="toe4Link" file="toe4Link.STL"/>
+    </asset>
+    <worldbody>
+        <light diffuse=".5 .5 .5" pos="0 0 3" dir="0 0 -1"/>
+        <geom name="floor" type="plane" size="0 0 0.05" material="grid"/>
+        <body name="base_link" pos="0.0 0.0 0.54">
+            <inertial pos="-9.2e-05 0.001447 -0.042478" quat="-0.00843975 0.707157 -0.00839426 0.706957" mass="35"
+                      diaginertia="0.945616 0.859891 0.259495"/>
+            <joint name="floating_base_joint" type="free"/>
+            <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.79216 0.81961 0.93333 1"
+                  mesh="base_link"/>
+            <geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="base_link"/>
+            <site name="site_imu" pos="0 0 0"/>
+
+            <body name="Abd1Link" pos="0.244 -0.115 0">
+                <inertial pos="0.05057 0.046892 1e-06" quat="0.673131 0.673113 0.216685 0.216475" mass="1.656"
+                          diaginertia="0.00276441 0.00265385 0.0019183"/>
+                <joint name="Abd1Joint" pos="0 0 0" axis="1 0 0"/>
+                <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.89804 0.91765 0.92941 1"
+                      mesh="Abd1Link"/>
+                <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Abd1Link"/>
+                <body name="Hip1Link" pos="0.056 0.018587 0">
+                    <inertial pos="-0.00063 -0.0201 -0.15827" quat="0.447929 -0.0173336 -0.0144553 0.893784"
+                              mass="1.337" diaginertia="0.0188849 0.0188331 0.00080071"/>
+                    <joint name="Hip1Joint" pos="0 0 0" axis="0 -1 0"/>
+                    <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.79216 0.81961 0.93333 1"
+                          mesh="Hip1Link"/>
+                    <geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="Hip1Link"/>
+                    <body name="Knee1Link" pos="0 -0.10009 -0.36">
+                        <inertial pos="-0.00437397 -4.12835e-05 -0.157764"
+                                  quat="0.708075 1.33188e-05 0.0004089 0.706137" mass="0.75211"
+                                  diaginertia="0.0115786 0.0115192 0.000167844"/>
+                        <joint name="Knee1Joint" pos="0 0 0" axis="0 -1 0"/>
+                        <geom type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="0.898039 0.917647 0.929412 1" mesh="Knee1Link"/>
+                        <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="Knee1Link"/>
+                        <geom pos="-0.00054829 0 -0.36" type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="1 1 1 1" mesh="toe1link"/>
+                        <geom pos="-0.00054829 0 -0.36" type="mesh" rgba="1 1 1 1" mesh="toe1link"/>
+                        <site name="site_forcesensor1" pos="-0.00054829 0 -0.36"/>
+                    </body>
+                </body>
+            </body>
+            <body name="Abd2Link" pos="-0.244 -0.115 0">
+                <inertial pos="-0.05057 0.046982 -1e-06" quat="0.673113 0.673131 -0.216475 -0.216685" mass="1.656"
+                          diaginertia="0.00276441 0.00265385 0.0019183"/>
+                <joint name="Abd2Joint" pos="0 0 0" axis="1 0 0"/>
+                <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.89804 0.91765 0.92941 1"
+                      mesh="Abd2Link"/>
+                <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Abd2Link"/>
+                <body name="Hip2Link" pos="-0.056 0.018587 0">
+                    <inertial pos="-0.00063 -0.0201 -0.15827" quat="0.447929 -0.0173336 -0.0144553 0.893784"
+                              mass="1.337" diaginertia="0.0188849 0.0188331 0.00080071"/>
+                    <joint name="Hip2Joint" pos="0 0 0" axis="0 -1 0"/>
+                    <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.79216 0.81961 0.93333 1"
+                          mesh="Hip2Link"/>
+                    <geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="Hip2Link"/>
+                    <body name="Knee2Link" pos="0 -0.10009 -0.36">
+                        <inertial pos="-0.00437397 -4.12848e-05 -0.157764"
+                                  quat="0.708075 1.33058e-05 0.0004089 0.706137" mass="0.75211"
+                                  diaginertia="0.0115786 0.0115192 0.000167844"/>
+                        <joint name="Knee2Joint" pos="0 0 0" axis="0 -1 0"/>
+                        <geom type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="0.89804 0.91765 0.92941 1" mesh="Knee2Link"/>
+                        <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Knee2Link"/>
+                        <geom pos="-0.00054828 0 -0.36" type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="1 1 1 1" mesh="toe2Link"/>
+                        <geom pos="-0.00054828 0 -0.36" type="mesh" rgba="1 1 1 1" mesh="toe2Link"/>
+                        <site name="site_forcesensor2" pos="-0.00054828 0 -0.36"/>
+                    </body>
+                </body>
+            </body>
+            <body name="Abd3Link" pos="0.244 0.115 0">
+                <inertial pos="0.05057 -0.046982 -1e-06" quat="0.673131 0.673113 -0.216685 -0.216475" mass="1.656"
+                          diaginertia="0.00276441 0.00265385 0.0019183"/>
+                <joint name="Abd3Joint" pos="0 0 0" axis="1 0 0"/>
+                <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.89804 0.91765 0.92941 1"
+                      mesh="Abd3Link"/>
+                <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Abd3Link"/>
+                <body name="Hip3Link" pos="0.056 -0.018587 0">
+                    <inertial pos="-0.00063 0.0201 -0.15827" quat="0.447819 -0.0173309 -0.0144618 0.893839" mass="1.337"
+                              diaginertia="0.0188849 0.0188331 0.000800664"/>
+                    <joint name="Hip3Joint" pos="0 0 0" axis="0 -1 0"/>
+                    <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.79216 0.81961 0.93333 1"
+                          mesh="Hip3Link"/>
+                    <geom type="mesh" rgba="0.79216 0.81961 0.93333 1" mesh="Hip3Link"/>
+                    <body name="Knee3Link" pos="0 0.10009 -0.36">
+                        <inertial pos="-0.00437397 1.36069e-05 -0.157764"
+                                  quat="0.706818 0.000275735 0.00014696 0.707395" mass="0.75211"
+                                  diaginertia="0.0115786 0.0115192 0.00016784"/>
+                        <joint name="Knee3Joint" pos="0 0 0" axis="0 -1 0"/>
+                        <geom type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="0.89804 0.91765 0.92941 1" mesh="Knee3Link"/>
+                        <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Knee3Link"/>
+                        <geom pos="-0.00054828 0 -0.36" type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="1 1 1 1" mesh="toe3Link"/>
+                        <geom pos="-0.00054828 0 -0.36" type="mesh" rgba="1 1 1 1" mesh="toe3Link"/>
+                        <site name="site_forcesensor3" pos="-0.00054828 0 -0.36"/>
+                    </body>
+                </body>
+            </body>
+            <body name="Abd4Link" pos="-0.244 0.115 0">
+                <inertial pos="-0.05057 -0.046982 1e-06" quat="0.673113 0.673131 0.216475 0.216685" mass="1.656"
+                          diaginertia="0.00276441 0.00265385 0.0019183"/>
+                <joint name="Abd4Joint" pos="0 0 0" axis="1 0 0"/>
+                <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.89804 0.91765 0.92941 1"
+                      mesh="Abd4Link"/>
+                <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Abd4Link"/>
+                <body name="Hip4Link" pos="-0.056 -0.018588 0">
+                    <inertial pos="-0.00063 0.0201 -0.15827" quat="0.447819 -0.0173309 -0.0144618 0.893839" mass="1.337"
+                              diaginertia="0.0188849 0.0188331 0.000800664"/>
+                    <joint name="Hip4Joint" pos="0 0 0" axis="0 -1 0"/>
+                    <geom type="mesh" contype="0" conaffinity="0" group="1" density="0" rgba="0.89804 0.91765 0.92941 1"
+                          mesh="Hip4Link"/>
+                    <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Hip4Link"/>
+                    <body name="Knee4Link" pos="0 0.10009 -0.36">
+                        <inertial pos="-0.00437397 6.84984e-05 -0.157764"
+                                  quat="0.705558 0.000537227 -0.000115922 0.708652" mass="0.75211"
+                                  diaginertia="0.0115786 0.0115192 0.000167852"/>
+                        <joint name="Knee4Joint" pos="0 0 0" axis="0 -1 0"/>
+                        <geom type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="0.89804 0.91765 0.92941 1" mesh="Knee4Link"/>
+                        <geom type="mesh" rgba="0.89804 0.91765 0.92941 1" mesh="Knee4Link"/>
+                        <geom pos="-0.00054828 0 -0.36" type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                              rgba="1 1 1 1" mesh="toe4Link"/>
+                        <geom pos="-0.00054828 0 -0.36" type="mesh" rgba="1 1 1 1" mesh="toe4Link"/>
+                        <site name="site_forcesensor4" pos="-0.00054828 0 -0.36"/>
+                    </body>
+                </body>
+            </body>
+        </body>
+    </worldbody>
+    <actuator>
+        <motor name="Abd1Joint" joint="Abd1Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Abd2Joint" joint="Abd2Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Abd3Joint" joint="Abd3Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Abd4Joint" joint="Abd4Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+
+        <motor name="Hip1Joint" joint="Hip1Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Hip2Joint" joint="Hip2Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Hip3Joint" joint="Hip3Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Hip4Joint" joint="Hip4Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+
+        <motor name="Knee1Joint" joint="Knee1Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Knee2Joint" joint="Knee2Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Knee3Joint" joint="Knee3Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+        <motor name="Knee4Joint" joint="Knee4Joint" gear="1" ctrllimited="true" ctrlrange="-180 180"/>
+
+    </actuator>
+
+    <sensor>
+        <force name="forcesensor1" site="site_forcesensor1" cutoff="5000.0"/>
+        <force name="forcesensor2" site="site_forcesensor2" cutoff="5000.0"/>
+        <force name="forcesensor3" site="site_forcesensor3" cutoff="5000.0"/>
+        <force name="forcesensor4" site="site_forcesensor4" cutoff="5000.0"/>
+
+        <accelerometer name="imu_acc" site="site_imu"/>
+        <gyro name="imu_gyro" site="site_imu"/>
+    </sensor>
+
+    <contact>
+        <exclude body1="base_link" body2="Hip1Link"/>
+        <exclude body1="base_link" body2="Hip2Link"/>
+        <exclude body1="base_link" body2="Hip3Link"/>
+        <exclude body1="base_link" body2="Hip4Link"/>
+    </contact>
+</mujoco>
