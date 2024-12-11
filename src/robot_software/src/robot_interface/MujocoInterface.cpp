@@ -52,6 +52,7 @@ namespace Galileo
 
         auto msg = custom_msgs::msg::RobotStateMsg();
         eigenToFloat64MultiArray(pinocchioInterface_->legPosBaseInBody, msg.leg_pos_base_in_body);
-        RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg.leg_pos_base_in_body.data[0]);
+
+        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg.leg_pos_base_in_body.data[0]);
     }
 } // Galileo

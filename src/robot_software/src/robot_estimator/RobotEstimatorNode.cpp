@@ -11,7 +11,8 @@ namespace Galileo
 {
     RobotEstimatorNode::RobotEstimatorNode(std::shared_ptr<PinocchioInterface> pinocchio_interface):
         Node("estimate_node", rclcpp::NodeOptions().use_intra_process_comms(true))
-        , pinocchioInterface_(std::move(pinocchio_interface))
+        , pinocchioInterface_(std::move(pinocchio_interface)),
+        eskf_(std::make_shared<EskfOnSe3>(std::move(pinocchio_interface)))
     {
         auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
 

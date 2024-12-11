@@ -25,6 +25,7 @@ file(GLOB_RECURSE source
         ${CMAKE_CURRENT_SOURCE_DIR}/src/robot_dynamics/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/robot_planning/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/robot_utils/*.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/robot_interface/*.cpp
 )
 
 add_executable(main_app ${source})

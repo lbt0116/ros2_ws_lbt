@@ -25,6 +25,18 @@ namespace Galileo
 
         void set_imu_msg(const sensor_msgs::msg::Imu::ConstSharedPtr& msg) const;
         void set_joint_msg(const sensor_msgs::msg::JointState::ConstSharedPtr& msg) const;
+
+
+        Eigen::MatrixXd get_centroidal_matrix() const;
+
+        Eigen::Matrix3d get_inertia_matrix() const;
+
+        Eigen::MatrixXd get_jb_matrix() const;
+
+        double get_total_mass() const;
+
+        Eigen::MatrixXd get_jacobian_matrix(const int i) const;
+
         void update();
         // ~PinocchioInterface() = default;
         //State In World Frame

@@ -9,7 +9,7 @@
 #include "robot_software/robot_utils/MatrixTypes.h"
 #include "robot_software/robot_interface/PinocchioInterface.h"
 #include "robot_software/robot_utils/UtilFunc.h"
-#include "robot_software/robot_estimator/ESKF_SE3_simple.h"
+#include "robot_software/robot_estimator/EskfOnSe3.h"
 #include "rclcpp/rclcpp.hpp"
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "custom_msgs/msg/robot_state_msg.hpp"
@@ -28,7 +28,7 @@ namespace Galileo
 
     private:
         void pub_estimation_callback();
-
+        std::shared_ptr<EskfOnSe3> eskf_;
         rclcpp::TimerBase::SharedPtr timer_;
         rclcpp::Publisher<custom_msgs::msg::RobotStateMsg>::SharedPtr statePub_;
         std::shared_ptr<PinocchioInterface> pinocchioInterface_;

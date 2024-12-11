@@ -9,9 +9,12 @@
 #include "pinocchio/algorithm/jacobian.hpp"
 #include "pinocchio/algorithm/joint-configuration.hpp"
 #include "pinocchio/algorithm/kinematics.hpp"
+#include "pinocchio/algorithm/center-of-mass.hpp"
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 #include "robot_software/robot_utils/UtilFunc.h"
+#include "pinocchio/algorithm/centroidal.hpp"
+#include <pinocchio/algorithm/joint-configuration.hpp>
 using namespace Eigen;
 // using namespace pinocchio;
 namespace pin = pinocchio;
@@ -39,9 +42,10 @@ namespace Galileo
 
         void update_pinocchio(PinocchioInterface* pino_);
 
-    private:
         pinocchio::Model model; // Pinocchio的Model
         pinocchio::Data data; // Pinocchio的Data
+
+    private:
     };
 
     PinocchioInterface::PinocchioInterfaceImpl::PinocchioInterfaceImpl()
@@ -85,6 +89,10 @@ namespace Galileo
                                ddq);
         pin::framesForwardKinematics(model, data, q);
         pin::computeJointJacobians(model, data, q);
+        // 更新数据结构（计算质心相关信息）
+        pin::centerOfMass(model, data, q); // 计算质心位置
+        pin::computeCentroidalMap(model, data, q); // 计算质心动力学映射
+
 
         pin::getFrameJacobian(model, data, 12, pinocchio::LOCAL_WORLD_ALIGNED,
                               Jacobian[0]); //?什么坐标系
@@ -200,6 +208,37 @@ namespace Galileo
             impl_->jointTorque(row, col) = msg->effort[i];
         }
     }
+
+    Eigen::MatrixXd PinocchioInterface::get_centroidal_matrix() const
+    {
+        return impl_->data.Ag;
+    }
+
+
+    Eigen::Matrix3d PinocchioInterface::get_inertia_matrix() const
+    {
+        return impl_->model.inertias[0].inertia().matrix();
+    }
+
+    Eigen::MatrixXd PinocchioInterface::get_jb_matrix() const
+    {
+        Eigen::Matrix<double, 6, 6> m;
+        m <<
+            impl_->model.inertias[0].inertia().matrix(), Eigen::Matrix3d::Zero(), Eigen::Matrix3d::Zero(),
+            impl_->data.mass[0] * Eigen::Matrix3d::Identity();
+        return m;
+    }
+
+    double PinocchioInterface::get_total_mass() const
+    {
+        return impl_->data.mass[0];
+    }
+
+    Eigen::MatrixXd PinocchioInterface::get_jacobian_matrix(const int i) const
+    {
+        return impl_->Jacobian[i];
+    }
+
 
     void PinocchioInterface::update()
     {
