@@ -16,7 +16,7 @@ namespace Galileo
         static constexpr int NoiseNum = 12;
         static constexpr int ObNum = 15;
 
-        const Eigen::Vector3d grav = {0,0,-9.8};
+        const Eigen::Vector3d grav = {0, 0, -9.8};
 
         Eigen::Matrix<double, StateNum, 1> dx_mat;
         Eigen::Matrix<double, StateNum, 1> dxpre_mat;
@@ -64,13 +64,14 @@ namespace Galileo
 
         void setTransMatrix();
         void setMeasureMatrix();
-        void setErrorMatrix(const Eigen::Matrix<double, 3, 1>& am, const Eigen::Matrix<double, 3, 1>& wm,
-                            const Eigen::Matrix<double, 3, 1>& vm,
-                            const Eigen::Matrix<double, 3, 3>& Rm,
-                            const Eigen::Matrix<double, 3, 1>& uc);
+        void setErrorMatrix();
+        Eigen::Matrix<double, 3, 1> am_;
+        Eigen::Matrix<double, 3, 1> wm_;
+        Eigen::Matrix<double, 3, 1> vm_;
+        Eigen::Matrix<double, 3, 3> Rm_;
+        Eigen::Matrix<double, 3, 1> uc_;
 
-
-        void run();
+        void run(const Eigen::Matrix<int, 4, 1>& phase);
     };
 } // Galileo
 

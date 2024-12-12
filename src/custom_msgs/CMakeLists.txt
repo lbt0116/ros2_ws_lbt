@@ -16,7 +16,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-        "msg/CustomMessage.msg"
+        "msg/MujocoMsg.msg"
         "msg/SensorMsg.msg"
         "msg/ActuatorCmds.msg"
         "msg/RobotStateMsg.msg"

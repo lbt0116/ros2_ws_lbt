@@ -37,9 +37,9 @@ void float64MultiArrayToEigen(
     const std_msgs::msg::Float64MultiArray& msg,
     Eigen::MatrixBase<Derived>& matrix_out)
 {
-    matrix_out.derived() = Eigen::Map<const Eigen::Matrix<double, Derived::RowsAtCompileTime,
-                                                          Derived::ColsAtCompileTime>>(
-        msg.data.data(), msg.layout.dim[0].size, msg.layout.dim[1].size);
+    matrix_out.derived() =
+        Eigen::Map<const Eigen::Matrix<double, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>
+        (msg.data.data(), msg.layout.dim[0].size, msg.layout.dim[1].size);
 }
 
 // 通用模板函数：将Eigen矩阵转换为std::vector

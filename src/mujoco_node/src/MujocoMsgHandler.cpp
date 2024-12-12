@@ -22,8 +22,8 @@ namespace Galileo
             "imu_data", qos);
         joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>(
             "joint_states", qos);
-        // odom_publisher_ = this->create_publisher<nav_msgs::msg::Odometry>(
-        //     name_prefix + "odom", qos);
+        mujoco_msg_publisher_ = this->create_publisher<custom_msgs::msg::MujocoMsg>(
+            "mujoco_msg", qos);
 
 
         timers_.emplace_back(this->create_wall_timer(
@@ -77,6 +77,7 @@ namespace Galileo
             const std::unique_lock<std::recursive_mutex> lock(sim_->mtx);
             imu_callback();
             joint_callback();
+            contact_callback();
         }
     }
 
@@ -119,8 +120,50 @@ namespace Galileo
         // RCLCPP_INFO(this->get_logger(), "imu node %.2f", message.linear_acceleration.z);
     }
 
-    void MujocoMsgHandler::odom_callback()
+    void MujocoMsgHandler::contact_callback()
     {
+        auto msg = custom_msgs::msg::MujocoMsg();
+        std::vector<std::string> foot_geom_names = {
+            "site_forcesensor1", "site_forcesensor2", "site_forcesensor3", "site_forcesensor4"
+        };
+
+        std::vector<int> foot_geom_ids;
+        for (const auto& foot_name : foot_geom_names)
+        {
+            int geom_id = mj_name2id(sim_->m_, mjOBJ_SITE, foot_name.c_str());
+            if (geom_id == -1)
+            {
+                std::cerr << "Geometry " << foot_name << " not found in the model!" << std::endl;
+                return;
+            }
+            foot_geom_ids.push_back(geom_id);
+        }
+        int ground_geom_id = mj_name2id(sim_->m_, mjOBJ_GEOM, "floor");
+        for (int i = 0; i < sim_->d_->ncon; ++i)
+        {
+            const mjContact& contact = sim_->d_->contact[i];
+
+            // 检查接触点是否与足端几何体相关
+            for (int foot_geom_id : foot_geom_ids)
+                if (contact.geom1 == foot_geom_id || contact.geom2 == foot_geom_id)
+                    if (contact.geom1 == ground_geom_id || contact.geom2 == ground_geom_id)
+                    {
+                        // 提取接触力
+                        mjtNum force[6]; // 包含法向力和摩擦力的 6D 力
+                        mj_contactForce(sim_->m_, sim_->d_, i, force);
+                        // 将接触力填入消息的 data 部分
+                        msg.ground_reaction_force.insert(msg.ground_reaction_force.end(), force, force + 3);
+                        std::cout << force[0] << "," << force[1] << "," << force[2] << "   force" << i << std::endl;
+                    }
+        }
+        std::cout << msg.ground_reaction_force.size() << "   msg.ground_reaction_force.data.size()" << std::endl;
+
+
+        mujoco_msg_publisher_->publish(msg);
+        // RCLCPP_INFO(this->get_logger(), "Float64MultiArray: [%s]",
+        //             std::accumulate(msg.ground_reaction_force.data.begin() + 1, msg.ground_reaction_force.data.end(),
+        //                 std::to_string(msg.ground_reaction_force.data[0]),
+        //                 [](const std::string &a, double b) { return a + ", " + std::to_string(b); }).c_str());
     }
 
     void MujocoMsgHandler::joint_callback()

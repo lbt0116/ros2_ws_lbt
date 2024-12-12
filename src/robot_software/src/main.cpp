@@ -3,7 +3,6 @@
 //
 
 #include "rclcpp/rclcpp.hpp"
-#include "custom_msgs/msg/custom_message.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
 #include "robot_software/robot_interface/MujocoInterface.h"

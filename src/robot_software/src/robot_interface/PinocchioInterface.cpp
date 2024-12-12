@@ -15,6 +15,8 @@
 #include "robot_software/robot_utils/UtilFunc.h"
 #include "pinocchio/algorithm/centroidal.hpp"
 #include <pinocchio/algorithm/joint-configuration.hpp>
+
+
 using namespace Eigen;
 // using namespace pinocchio;
 namespace pin = pinocchio;
@@ -40,12 +42,10 @@ namespace Galileo
         Matrix<double, 6, 18> Jacobian[4];
 
 
-        void update_pinocchio(PinocchioInterface* pino_);
+        void update_pinocchio(PinocchioInterface* pin_);
 
         pinocchio::Model model; // Pinocchio的Model
         pinocchio::Data data; // Pinocchio的Data
-
-    private:
     };
 
     PinocchioInterface::PinocchioInterfaceImpl::PinocchioInterfaceImpl()
@@ -56,7 +56,7 @@ namespace Galileo
         data = pinocchio::Data(model);
     }
 
-    void PinocchioInterface::PinocchioInterfaceImpl::update_pinocchio(PinocchioInterface* pino_)
+    void PinocchioInterface::PinocchioInterfaceImpl::update_pinocchio(PinocchioInterface* pin_)
     {
         //pinocchio 四元数 xyzw
         //Eigen wxyz
@@ -105,6 +105,19 @@ namespace Galileo
 
         pin::updateFramePlacements(model, data);
 
+        pin_->jonitPos = jointPos;
+        pin_->jonitVelo = jointVelo;
+
+        pin_->totalMass = data.mass[0];
+        pin_->baseInertiaMatrix = model.inertias[0].inertia().matrix();
+        pin_->baseSpatialInertiaMatrix <<
+            model.inertias[0].inertia().matrix(), Eigen::Matrix3d::Zero(), Eigen::Matrix3d::Zero(),
+            data.mass[0] * Eigen::Matrix3d::Identity();
+
+        pin_->baseRotationMatrix = data.oMi[1].rotation();
+
+        pin_->baseAcc = imuAcc;
+        pin_->baseAngVelo = imuAngvelo;
 
         for (int leg = 0; leg < 4; ++leg)
         {
@@ -127,20 +140,20 @@ namespace Galileo
             // ---- 4. 计算足端相对于机身的直接位置 ----
             // 足端相对于机身在机身坐标系中的位置
             Eigen::Vector3d foot_pos_in_body = base_pose_in_world.actInv(foot_pose_in_world).translation();
-            pino_->legPosBaseInBody.col(leg) = foot_pos_in_body;
+            pin_->legPosBaseInBody.col(leg) = foot_pos_in_body;
 
             // 足端相对于机身在世界坐标系中的位置
-            pino_->legPosBaseInWorld.col(leg) = foot_pose_in_world.translation();
+            pin_->legPosBaseInWorld.col(leg) = foot_pose_in_world.translation();
 
             // ---- 5. 计算足端相对于髋关节的位置 ----
             // 足端相对于髋关节在世界坐标系中的位置
             Eigen::Vector3d foot_pos_rel_hip_in_world = hip_pose_in_world.actInv(foot_pose_in_world).translation();
-            pino_->legPosHipInWorld.col(leg) = foot_pos_rel_hip_in_world;
+            pin_->legPosHipInWorld.col(leg) = foot_pos_rel_hip_in_world;
 
             // 足端相对于髋关节在机身坐标系中的位置
             Eigen::Vector3d foot_pos_rel_hip_in_body = base_pose_in_world.actInv(hip_pose_in_world).rotation() *
                 foot_pos_rel_hip_in_world;
-            pino_->legPosHipInBody.col(leg) = foot_pos_rel_hip_in_body;
+            pin_->legPosHipInBody.col(leg) = foot_pos_rel_hip_in_body;
 
             // ---- 6. 提取速度信息 ----
             // 足端在世界坐标系中的速度
@@ -152,14 +165,15 @@ namespace Galileo
 
             // 足端相对于髋关节的速度（世界坐标系）
             Eigen::Vector3d foot_vel_rel_hip_in_world = foot_vel_in_world.linear() - hip_vel_in_world.linear();
-            pino_->legVeloInWorld.col(leg) = foot_vel_rel_hip_in_world;
+            pin_->legVeloInWorld.col(leg) = foot_vel_rel_hip_in_world;
 
             // 足端相对于髋关节的速度（机身坐标系）
             Eigen::Vector3d foot_vel_rel_hip_in_body = base_pose_in_world.actInv(hip_pose_in_world).rotation() *
                 foot_vel_rel_hip_in_world;
-            pino_->legVeloInBody.col(leg) = foot_vel_rel_hip_in_body;
+            pin_->legVeloInBody.col(leg) = foot_vel_rel_hip_in_body;
         }
     }
+
 
     PinocchioInterface::PinocchioInterface() : impl_(std::make_unique<PinocchioInterfaceImpl>())
     {
@@ -209,30 +223,35 @@ namespace Galileo
         }
     }
 
-    Eigen::MatrixXd PinocchioInterface::get_centroidal_matrix() const
+    void PinocchioInterface::set_mujoco_msg(const custom_msgs::msg::MujocoMsg::ConstSharedPtr& msg)
     {
-        return impl_->data.Ag;
+        // float64MultiArrayToEigen(msg->ground_reaction_force, legForceInWorld);
     }
 
+    // Eigen::MatrixXd PinocchioInterface::get_centroidal_matrix() const
+    // {
+    //     return impl_->data.Ag;
+    // }
 
-    Eigen::Matrix3d PinocchioInterface::get_inertia_matrix() const
-    {
-        return impl_->model.inertias[0].inertia().matrix();
-    }
 
-    Eigen::MatrixXd PinocchioInterface::get_jb_matrix() const
-    {
-        Eigen::Matrix<double, 6, 6> m;
-        m <<
-            impl_->model.inertias[0].inertia().matrix(), Eigen::Matrix3d::Zero(), Eigen::Matrix3d::Zero(),
-            impl_->data.mass[0] * Eigen::Matrix3d::Identity();
-        return m;
-    }
-
-    double PinocchioInterface::get_total_mass() const
-    {
-        return impl_->data.mass[0];
-    }
+    // Eigen::Matrix3d PinocchioInterface::get_inertia_matrix() const
+    // {
+    //     return impl_->model.inertias[0].inertia().matrix();
+    // }
+    //
+    // Eigen::MatrixXd PinocchioInterface::get_jb_matrix() const
+    // {
+    //     Eigen::Matrix<double, 6, 6> m;
+    //     m <<
+    //         impl_->model.inertias[0].inertia().matrix(), Eigen::Matrix3d::Zero(), Eigen::Matrix3d::Zero(),
+    //         impl_->data.mass[0] * Eigen::Matrix3d::Identity();
+    //     return m;
+    // }
+    //
+    // double PinocchioInterface::get_total_mass() const
+    // {
+    //     return impl_->data.mass[0];
+    // }
 
     Eigen::MatrixXd PinocchioInterface::get_jacobian_matrix(const int i) const
     {

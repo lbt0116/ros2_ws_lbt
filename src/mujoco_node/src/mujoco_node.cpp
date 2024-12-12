@@ -6,7 +6,7 @@
 #include "mujoco_node.h"
 #include "stdio.h"
 #include "rclcpp/rclcpp.hpp"
-#include "custom_msgs/msg/custom_message.hpp"
+#include "custom_msgs/msg/mujoco_msg.hpp"
 #include "array_safety.h"
 #include "simulate.h"
 
@@ -566,28 +566,6 @@ void PhysicsThread(mj::Simulate* sim, const char* filename)
   mj_deleteModel(m);
 }
 
-class MujocoNode : public rclcpp::Node
-{
-public:
-  MujocoNode() : Node("custom_mujoco")
-  {
-    publisher_ = this->create_publisher<custom_msgs::msg::CustomMessage>("mujoco_topic", 10);
-    timer_ = this->create_wall_timer(std::chrono::seconds(1), std::bind(&MujocoNode::publish_message, this));
-  }
-
-private:
-  void publish_message()
-  {
-    auto message = custom_msgs::msg::CustomMessage();
-    message.id = 1;
-    message.data = "Hello, mujoco!";
-    publisher_->publish(message);
-    RCLCPP_INFO(this->get_logger(), "Publishing: '%s'", message.data.c_str());
-  }
-
-  rclcpp::Publisher<custom_msgs::msg::CustomMessage>::SharedPtr publisher_;
-  rclcpp::TimerBase::SharedPtr timer_;
-};
 
 char error[1000];
 

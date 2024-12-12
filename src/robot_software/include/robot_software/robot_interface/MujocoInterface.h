@@ -11,6 +11,7 @@
 #include "robot_software/robot_utils/UtilFunc.h"
 #include "rclcpp/rclcpp.hpp"
 #include "custom_msgs/msg/actuator_cmds.hpp"
+#include "custom_msgs/msg/mujoco_msg.hpp"
 #include "custom_msgs/msg/robot_state_msg.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -29,6 +30,7 @@ namespace Galileo
     private:
         void sub_imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg);
         void sub_joint_callback(const sensor_msgs::msg::JointState::SharedPtr msg);
+        void sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg);
         void sub_sensor_callback(const sensor_msgs::msg::Imu::ConstSharedPtr& imu_msg,
                                  const sensor_msgs::msg::JointState::ConstSharedPtr& joint_state_msg) const;
 
@@ -37,6 +39,7 @@ namespace Galileo
 
         rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imuPub_;
         rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr jointSub_;
+        rclcpp::Subscription<custom_msgs::msg::MujocoMsg>::SharedPtr mujocoSub_;
 
         // rclcpp::TimerBase::SharedPtr timer_;
         // rclcpp::Publisher<custom_msgs::msg::RobotStateMsg>::SharedPtr statePub_;

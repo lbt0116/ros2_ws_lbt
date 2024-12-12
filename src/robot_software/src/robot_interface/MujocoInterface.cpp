@@ -20,6 +20,9 @@ namespace Galileo
         imu_subscriber_.subscribe(this, "imu_data", qos.get_rmw_qos_profile());
         joint_subscriber_.subscribe(this, "joint_states", qos.get_rmw_qos_profile());
 
+        mujocoSub_ = this->create_subscription<custom_msgs::msg::MujocoMsg>(
+            "mujoco_msg", qos, std::bind(&MujocoInterface::sub_mujoco_callback, this, std::placeholders::_1));
+
         // 创建近似时间同步器，队列大小为10，允许最大时间偏差为1ms
         sync_policy_ = std::make_shared<SyncPolicy>(3);
         sync_policy_->setMaxIntervalDuration(1ms); // 允许最大同步偏差为 1ms
@@ -40,6 +43,14 @@ namespace Galileo
         //     });
     }
 
+
+    void MujocoInterface::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
+    {
+        // pinocchioInterface_->set_mujoco_msg(msg);
+
+        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg->ground_reaction_force.data[0]);
+        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg->ground_reaction_force.data.at(0));
+    }
 
     void MujocoInterface::sub_sensor_callback(const sensor_msgs::msg::Imu::ConstSharedPtr& imu_msg,
                                               const sensor_msgs::msg::JointState::ConstSharedPtr& joint_state_msg) const

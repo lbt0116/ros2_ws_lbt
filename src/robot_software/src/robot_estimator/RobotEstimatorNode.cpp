@@ -26,9 +26,13 @@ namespace Galileo
     void RobotEstimatorNode::pub_estimation_callback()
     {
         auto msg = custom_msgs::msg::RobotStateMsg();
+        vec4i phase = {1, 1, 1, 1}; // todo phase
+        // eskf_->run(phase);
+
         eigenToFloat64MultiArray(pinocchioInterface_->legPosBaseInBody, msg.leg_pos_base_in_body);
         statePub_->publish(msg);
-        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg.leg_pos_base_in_body.data[0]);
+        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f %.2f %.2f", eskf_->p(0), eskf_->p(1),
+        //             eskf_->p(2)) ;
         // msg.
     }
 } // Galileo

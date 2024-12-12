@@ -24,7 +24,7 @@
         <mesh name="Abd1Link" file="Abd1Link.STL"/>
         <mesh name="Hip1Link" file="Hip1Link.STL"/>
         <mesh name="Knee1Link" file="Knee1Link.STL"/>
-        <mesh name="toe1link" file="toe1Link.STL"/>
+        <mesh name="toe1Link" file="toe1Link.STL"/>
         <mesh name="Abd2Link" file="Abd2Link.STL"/>
         <mesh name="Hip2Link" file="Hip2Link.STL"/>
         <mesh name="Knee2Link" file="Knee2Link.STL"/>
@@ -73,8 +73,8 @@
                               rgba="0.898039 0.917647 0.929412 1" mesh="Knee1Link"/>
                         <geom type="mesh" rgba="0.898039 0.917647 0.929412 1" mesh="Knee1Link"/>
                         <geom pos="-0.00054829 0 -0.36" type="mesh" contype="0" conaffinity="0" group="1" density="0"
-                              rgba="1 1 1 1" mesh="toe1link"/>
-                        <geom pos="-0.00054829 0 -0.36" type="mesh" rgba="1 1 1 1" mesh="toe1link"/>
+                              rgba="1 1 1 1" mesh="toe1Link"/>
+                        <geom pos="-0.00054829 0 -0.36" type="mesh" rgba="1 1 1 1" mesh="toe1Link"/>
                         <site name="site_forcesensor1" pos="-0.00054829 0 -0.36"/>
                     </body>
                 </body>

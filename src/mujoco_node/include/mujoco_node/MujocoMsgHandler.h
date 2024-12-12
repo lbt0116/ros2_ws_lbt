@@ -18,8 +18,10 @@
 #include "simulate.h"
 #include "custom_msgs/msg/sensor_msg.h"
 #include "custom_msgs/msg/actuator_cmds.hpp"
+#include "custom_msgs/msg/mujoco_msg.hpp"
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
+#include <vector>
 
 using namespace rclcpp;
 
@@ -54,7 +56,7 @@ namespace Galileo
 
         void imu_callback();
 
-        void odom_callback();
+        void contact_callback();
 
         void joint_callback();
 
@@ -70,8 +72,8 @@ namespace Galileo
         std::string name_prefix, model_param_name;
         std::vector<rclcpp::TimerBase::SharedPtr> timers_;
         rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr imu_publisher_;
-        rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr
-        joint_state_publisher_;
+        rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
+        rclcpp::Publisher<custom_msgs::msg::MujocoMsg>::SharedPtr mujoco_msg_publisher_;
         // rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
 
         rclcpp::Subscription<custom_msgs::msg::ActuatorCmds>::SharedPtr
