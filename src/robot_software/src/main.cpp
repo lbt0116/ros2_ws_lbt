@@ -20,8 +20,13 @@
 
 int main(int argc, char* argv[])
 {
+    // 设置环境变量启用颜色输出
+    setenv("RCUTILS_COLORIZED_OUTPUT", "1", 1);
     rclcpp::init(argc, argv);
     rclcpp::executors::SingleThreadedExecutor executor;
+
+
+
     auto Pin_ptr_ = std::make_shared<Galileo::PinocchioInterface>();
 
     const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterface>(Pin_ptr_);

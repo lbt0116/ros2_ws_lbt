@@ -12,7 +12,6 @@ find_package(custom_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(mujoco REQUIRED)
 
-
 file(GLOB_RECURSE source ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cc)
 
 add_executable(mujoco_node ${source})
