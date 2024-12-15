@@ -46,10 +46,9 @@ namespace Galileo
 
     void MujocoInterface::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
     {
-        // pinocchioInterface_->set_mujoco_msg(msg);
-
-        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg->ground_reaction_force.data[0]);
-        // RCLCPP_INFO(this->get_logger(), "pub leg_pos_base_in_body %.2f", msg->ground_reaction_force.data.at(0));
+        pinocchioInterface_->set_mujoco_msg(msg);
+        RCLCPP_INFO(this->get_logger(), "pub contact %.2d %.2d %.2d %.2d", msg->contact_state[0], msg->contact_state[1],
+                    msg->contact_state[2], msg->contact_state[3]);
     }
 
     void MujocoInterface::sub_sensor_callback(const sensor_msgs::msg::Imu::ConstSharedPtr& imu_msg,

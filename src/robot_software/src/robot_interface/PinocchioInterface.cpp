@@ -225,33 +225,10 @@ namespace Galileo
 
     void PinocchioInterface::set_mujoco_msg(const custom_msgs::msg::MujocoMsg::ConstSharedPtr& msg)
     {
-        // float64MultiArrayToEigen(msg->ground_reaction_force, legForceInWorld);
+        auto cols = msg->ground_reaction_force.size() / 3;
+        stdVectorToEigen(msg->ground_reaction_force, 3, cols);
     }
 
-    // Eigen::MatrixXd PinocchioInterface::get_centroidal_matrix() const
-    // {
-    //     return impl_->data.Ag;
-    // }
-
-
-    // Eigen::Matrix3d PinocchioInterface::get_inertia_matrix() const
-    // {
-    //     return impl_->model.inertias[0].inertia().matrix();
-    // }
-    //
-    // Eigen::MatrixXd PinocchioInterface::get_jb_matrix() const
-    // {
-    //     Eigen::Matrix<double, 6, 6> m;
-    //     m <<
-    //         impl_->model.inertias[0].inertia().matrix(), Eigen::Matrix3d::Zero(), Eigen::Matrix3d::Zero(),
-    //         impl_->data.mass[0] * Eigen::Matrix3d::Identity();
-    //     return m;
-    // }
-    //
-    // double PinocchioInterface::get_total_mass() const
-    // {
-    //     return impl_->data.mass[0];
-    // }
 
     Eigen::MatrixXd PinocchioInterface::get_jacobian_matrix(const int i) const
     {

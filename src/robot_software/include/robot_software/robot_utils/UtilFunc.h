@@ -54,6 +54,22 @@ std::vector<typename Derived::Scalar> eigenToStdVector(const Eigen::MatrixBase<D
     return std::vector<typename Derived::Scalar>(matrix.data(), matrix.data() + matrix.size());
 }
 
+// 通用模板函数：将std::vector转换为Eigen矩阵
+template <typename Scalar>
+Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> stdVectorToEigen(
+    const std::vector<Scalar>& vec, size_t rows, size_t cols)
+{
+    // 检查输入数据大小是否匹配指定的矩阵维度
+    if (vec.size() != rows * cols)
+    {
+        throw std::runtime_error("Size of std::vector does not match the specified matrix dimensions.");
+    }
+
+    // 构造Eigen矩阵并将数据以列优先顺序填充
+    Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> matrix(rows, cols);
+    std::copy(vec.data(), vec.data() + vec.size(), matrix.data());
+    return matrix;
+}
 
 #include "eigen3/Eigen/Dense"
 #include "sophus/se3.hpp"

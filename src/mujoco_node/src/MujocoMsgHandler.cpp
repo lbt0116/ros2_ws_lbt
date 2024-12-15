@@ -139,31 +139,42 @@ namespace Galileo
             foot_geom_ids.push_back(geom_id);
         }
         int ground_geom_id = mj_name2id(sim_->m_, mjOBJ_GEOM, "floor");
+
+        // 初始化接触状态数组，默认值为 0（未接触）
+        int contact_state[4] = {0, 0, 0, 0};
+
         for (int i = 0; i < sim_->d_->ncon; ++i)
         {
             const mjContact& contact = sim_->d_->contact[i];
 
-            // 检查接触点是否与足端几何体相关
-            for (int foot_geom_id : foot_geom_ids)
-                if (contact.geom1 == foot_geom_id || contact.geom2 == foot_geom_id)
-                    if (contact.geom1 == ground_geom_id || contact.geom2 == ground_geom_id)
-                    {
-                        // 提取接触力
-                        mjtNum force[6]; // 包含法向力和摩擦力的 6D 力
-                        mj_contactForce(sim_->m_, sim_->d_, i, force);
-                        // 将接触力填入消息的 data 部分
-                        msg.ground_reaction_force.insert(msg.ground_reaction_force.end(), force, force + 3);
-                        std::cout << force[0] << "," << force[1] << "," << force[2] << "   force" << i << std::endl;
-                    }
+            // 遍历所有足端
+            for (size_t foot_idx = 0; foot_idx < foot_geom_ids.size(); ++foot_idx)
+            {
+                int foot_geom_id = foot_geom_ids[foot_idx];
+
+                // 检查是否是足端与地面的接触
+                if ((contact.geom1 == foot_geom_id && contact.geom2 == ground_geom_id) ||
+                    (contact.geom1 == ground_geom_id && contact.geom2 == foot_geom_id))
+                {
+                    // 如果发生接触，标记对应的接触状态为 1
+                    contact_state[foot_idx] = 1;
+
+                    // 提取接触力
+                    mjtNum force[6]; // 包含法向力和摩擦力的 6D 力
+                    mj_contactForce(sim_->m_, sim_->d_, i, force);// todo contact
+
+                    // 将接触力填入消息的 data 部分
+                    msg.ground_reaction_force.insert(msg.ground_reaction_force.end(), force, force + 3);
+                }
+            }
         }
-        std::cout << msg.ground_reaction_force.size() << "   msg.ground_reaction_force.data.size()" << std::endl;
+        for (int i = 0; i < 4; i++)
+        {
+            msg.contact_state[i] = contact_state[i];
+        }
 
-
+        // 将接触状态数组填入消息
         mujoco_msg_publisher_->publish(msg);
-        // RCLCPP_INFO(this->get_logger(), "Float64MultiArray: [%s]",
-        //             std::accumulate(msg.ground_reaction_force.data.begin() + 1, msg.ground_reaction_force.data.end(),
-        //                 std::to_string(msg.ground_reaction_force.data[0]),
-        //                 [](const std::string &a, double b) { return a + ", " + std::to_string(b); }).c_str());
     }
 
     void MujocoMsgHandler::joint_callback()

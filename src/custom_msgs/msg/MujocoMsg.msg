@@ -1,3 +1,4 @@
 std_msgs/Header header
-float64[<=30] ground_reaction_force
+float64[] ground_reaction_force
+int32[4] contact_state
 

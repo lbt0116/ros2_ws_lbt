@@ -16,7 +16,6 @@ find_package(std_msgs REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(message_filters REQUIRED)
 
-
 file(GLOB_RECURSE source
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/robot_controller/*.cpp
@@ -45,7 +44,7 @@ ament_target_dependencies(main_app
         geometry_msgs
         std_msgs
         message_filters
-        )
+)
 
 target_link_libraries(main_app
         pinocchio::pinocchio)
@@ -60,4 +59,3 @@ target_include_directories(main_app PUBLIC
 install(TARGETS main_app
         DESTINATION lib/${PROJECT_NAME})
 ament_package()
-
