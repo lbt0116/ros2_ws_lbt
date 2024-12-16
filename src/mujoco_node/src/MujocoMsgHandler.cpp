@@ -7,7 +7,7 @@
 namespace Galileo
 {
 MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
-    : Node("MujocoMsgHandler"), sim_(sim), name_prefix("simulation/")
+    : Node("MujocoMsgHandler", rclcpp::NodeOptions().use_intra_process_comms(true)), sim_(sim), name_prefix("simulation/")
 {
     model_param_name = name_prefix + "model_file";
     this->declare_parameter(model_param_name, "");
@@ -17,10 +17,10 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
     //     std::bind(&MujocoMsgHandler::reset_callback, this,
     //               std::placeholders::_1, std::placeholders::_2));
 
-    auto qos               = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
-    imu_publisher_         = this->create_publisher<sensor_msgs::msg::Imu>("imu_data", qos);
+    auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
+    imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu_data", qos);
     joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", qos);
-    mujoco_msg_publisher_  = this->create_publisher<custom_msgs::msg::MujocoMsg>("mujoco_msg", qos);
+    mujoco_msg_publisher_ = this->create_publisher<custom_msgs::msg::MujocoMsg>("mujoco_msg", qos);
 
     timers_.emplace_back(this->create_wall_timer(1ms, std::bind(&MujocoMsgHandler::publish_mujoco_callback, this)));
 
@@ -73,9 +73,9 @@ void MujocoMsgHandler::publish_mujoco_callback()
 
 void MujocoMsgHandler::imu_callback()
 {
-    auto message            = sensor_msgs::msg::Imu();
+    auto message = sensor_msgs::msg::Imu();
     message.header.frame_id = &sim_->m_->names[0];
-    message.header.stamp    = rclcpp::Clock().now();
+    message.header.stamp = rclcpp::Clock().now();
     // const std::unique_lock<std::recursive_mutex> lock(sim_->mtx);
 
     for (int i = 0; i < sim_->m_->nsensor; i++)
@@ -107,7 +107,7 @@ void MujocoMsgHandler::imu_callback()
 }
 void MujocoMsgHandler::contact_callback()
 {
-    auto                     msg             = custom_msgs::msg::MujocoMsg();
+    auto msg = custom_msgs::msg::MujocoMsg();
     std::vector<std::string> foot_geom_names = {
         "toe1_contact", "toe2_contact", "toe3_contact", "toe4_contact"};
 
@@ -155,7 +155,7 @@ void MujocoMsgHandler::contact_callback()
     {
         msg.contact_state[i] = contact_state[i];
     }
-
+    
     // 将接触状态数组填入消息
     mujoco_msg_publisher_->publish(msg);
 }
@@ -166,7 +166,7 @@ void MujocoMsgHandler::joint_callback()
     {
         sensor_msgs::msg::JointState jointState;
         jointState.header.frame_id = &sim_->m_->names[0];
-        jointState.header.stamp    = rclcpp::Clock().now();
+        jointState.header.stamp = rclcpp::Clock().now();
         for (int i = 0; i < sim_->m_->njnt; i++)
         {
             if (sim_->m_->jnt_type[i] == mjtJoint::mjJNT_HINGE)
@@ -194,8 +194,8 @@ void MujocoMsgHandler::actuator_cmd_callback(const custom_msgs::msg::ActuatorCmd
     for (size_t k = 0; k < msg->actuators_name.size(); k++)
     {
         const std::string& actuator_name = msg->actuators_name[k];
-        int                actuator_id   = mj_name2id(sim_->m_, mjOBJ_ACTUATOR, actuator_name.c_str());
-        int                joint_id      = mj_name2id(sim_->m_, mjOBJ_JOINT, actuator_name.c_str());
+        int actuator_id = mj_name2id(sim_->m_, mjOBJ_ACTUATOR, actuator_name.c_str());
+        int joint_id = mj_name2id(sim_->m_, mjOBJ_JOINT, actuator_name.c_str());
 
         if (actuator_id == -1)
         {
@@ -213,7 +213,7 @@ void MujocoMsgHandler::actuator_cmd_callback(const custom_msgs::msg::ActuatorCmd
         sim_->d_->ctrl[actuator_id] = msg->kp[k] * position_error + msg->kd[k] * velocity_error + msg->torque[k];
 
         // Apply torque limits dynamically from the message
-        double torque_limit         = msg->torque_limit[k];
+        double torque_limit = msg->torque_limit[k];
         sim_->d_->ctrl[actuator_id] = std::clamp(sim_->d_->ctrl[actuator_id], -torque_limit, torque_limit);
     }
 }

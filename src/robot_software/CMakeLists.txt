@@ -1,9 +1,14 @@
+
+
 cmake_minimum_required(VERSION 3.8)
 project(robot_software)
 
-if (CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+# 设置 C++20 标准
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
-endif ()
+endif()
+
+
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -28,12 +33,10 @@ file(GLOB_RECURSE source
 )
 
 add_executable(main_app ${source})
-#add_executable(mujoco_node
-#        src/mujoco_node.cpp
-#        src/platform_ui_adapter.cc src/glfw_adapter.cc src/glfw_dispatch.cc src/simulate.cc src/lodepng.cpp
-#)#        src/platform_ui_adapter.cc src/glfw_adapter.cc src/glfw_dispatch.cc src/simulate.cc
+target_compile_features(main_app PUBLIC cxx_std_20)  # 确保使用 C++20 特性
+
 set_target_properties(main_app PROPERTIES
-        CXX_STANDARD 17
+        CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
 )
 ament_target_dependencies(main_app
