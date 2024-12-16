@@ -46,8 +46,8 @@ void LinearKalmanFilter::updateStateTransitionMatrix()
 
 Eigen::Matrix3d LinearKalmanFilter::eulerToRotation(const Eigen::Vector3d& euler)
 {
-    // 使用ZYX顺序的欧拉角
-    return Eigen::AngleAxisd(euler[0], Eigen::Vector3d::UnitZ()) * Eigen::AngleAxisd(euler[1], Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(euler[2], Eigen::Vector3d::UnitX());
+    // 使用ZYX顺序的欧拉角，并调用.matrix()转换为旋转矩阵
+    return (Eigen::AngleAxisd(euler[0], Eigen::Vector3d::UnitZ()) * Eigen::AngleAxisd(euler[1], Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(euler[2], Eigen::Vector3d::UnitX())).matrix();
 }
 
 void LinearKalmanFilter::predict(const Eigen::Vector3d& acc)

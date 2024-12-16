@@ -1,14 +1,23 @@
+cmake_minimum_required(VERSION 3.21)
 
 
-cmake_minimum_required(VERSION 3.8)
+
 project(robot_software)
 
-# 设置 C++20 标准
+# 检查并设置C++20
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# 验证C++标准
+if(CMAKE_CXX_STANDARD LESS 20)
+    message(FATAL_ERROR "Requires C++20 or higher!")
+endif()
+
+# 编译选项
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
-
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -38,7 +47,13 @@ target_compile_features(main_app PUBLIC cxx_std_20)  # 确保使用 C++20 特性
 set_target_properties(main_app PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
 )
+
+target_compile_definitions(main_app PRIVATE
+        REQUIRE_CPP_20=$<NOT:$<CXX_COMPILER_VERSION:$<COMPILE_LANGUAGE:CXX>>>
+)
+
 ament_target_dependencies(main_app
         rclcpp
         custom_msgs
