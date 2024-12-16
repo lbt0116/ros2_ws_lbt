@@ -91,9 +91,6 @@ void EskfOnSe3::setErrorMatrix()
     Error_Vec.block(6, 0, 3, 1) = baseAcc_ - (uc_ + Fe) / totalMass_ - grav;
     Error_Vec.block(9, 0, 3, 1) = baseAngVelo_ - w;
     Error_Vec.block(12, 0, 3, 1) = vm_ - v;
-
-    Eigen::Matrix<double, 12, 1> obs_vec;
-    obs_vec << UtilFnc::invCayley2se3(gm.matrix()), baseAngVelo_, vm_;
 }
 
 void EskfOnSe3::run(const Eigen::Matrix<int, 4, 1>& phase)
