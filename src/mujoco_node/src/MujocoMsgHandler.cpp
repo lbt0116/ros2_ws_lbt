@@ -7,7 +7,9 @@
 namespace Galileo
 {
 MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
-    : Node("MujocoMsgHandler", rclcpp::NodeOptions().use_intra_process_comms(true)), sim_(sim), name_prefix("simulation/")
+    : Node("MujocoMsgHandler", rclcpp::NodeOptions().use_intra_process_comms(true)),
+      sim_(sim),
+      name_prefix("simulation/")
 {
     model_param_name = name_prefix + "model_file";
     this->declare_parameter(model_param_name, "");
@@ -19,10 +21,12 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
 
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
     imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu_data", qos);
-    joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", qos);
+    joint_state_publisher_ =
+        this->create_publisher<sensor_msgs::msg::JointState>("joint_states", qos);
     mujoco_msg_publisher_ = this->create_publisher<custom_msgs::msg::MujocoMsg>("mujoco_msg", qos);
 
-    timers_.emplace_back(this->create_wall_timer(1ms, std::bind(&MujocoMsgHandler::publish_mujoco_callback, this)));
+    timers_.emplace_back(
+        this->create_wall_timer(1ms, std::bind(&MujocoMsgHandler::publish_mujoco_callback, this)));
 
     // timers_.emplace_back(this->create_wall_timer(
     //     1ms, std::bind(&MujocoMsgHandler::joint_callback, this)));
@@ -34,7 +38,9 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
     //     100ms, std::bind(&MujocoMsgHandler::drop_old_message, this)));
 
     actuator_cmd_subscription_ = this->create_subscription<custom_msgs::msg::ActuatorCmds>(
-        "actuators_cmds", qos, std::bind(&MujocoMsgHandler::actuator_cmd_callback, this, std::placeholders::_1));
+        "actuators_cmds",
+        qos,
+        std::bind(&MujocoMsgHandler::actuator_cmd_callback, this, std::placeholders::_1));
 
     // param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this
     // );
@@ -46,7 +52,8 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
 
     RCLCPP_INFO(this->get_logger(), "Start MujocoMsgHandler ...");
 
-    std::string model_file = this->get_parameter(model_param_name).get_parameter_value().get<std::string>();
+    std::string model_file =
+        this->get_parameter(model_param_name).get_parameter_value().get<std::string>();
     mju::strcpy_arr(sim_->filename, model_file.c_str());
     sim_->uiloadrequest.fetch_add(1);
 }
@@ -105,6 +112,7 @@ void MujocoMsgHandler::imu_callback()
     // RCLCPP_INFO(this->get_logger(), "imu node %.2f",
     // message.linear_acceleration.z);
 }
+
 void MujocoMsgHandler::contact_callback()
 {
     auto msg = custom_msgs::msg::MujocoMsg();
@@ -126,6 +134,8 @@ void MujocoMsgHandler::contact_callback()
 
     // 初始化接触状态数组，默认值为 0（未接触）
     int contact_state[4] = {0, 0, 0, 0};
+    // 初始化12维接触力向量,每条腿3维力
+    std::vector<double> contact_forces(12, 0.0);
 
     for (int i = 0; i < sim_->d_->ncon; ++i)
     {
@@ -137,26 +147,31 @@ void MujocoMsgHandler::contact_callback()
             int foot_geom_id = foot_geom_ids[foot_idx];
 
             // 检查是否是足端与地面的接触
-            if ((contact.geom1 == foot_geom_id && contact.geom2 == ground_geom_id) || (contact.geom1 == ground_geom_id && contact.geom2 == foot_geom_id))
+            if ((contact.geom1 == foot_geom_id && contact.geom2 == ground_geom_id)
+                || (contact.geom1 == ground_geom_id && contact.geom2 == foot_geom_id))
             {
                 // 如果发生接触，标记对应的接触状态为 1
                 contact_state[foot_idx] = 1;
 
                 // 提取接触力
-                mjtNum force[6];                                // 包含法向力和摩擦力的 6D 力
-                mj_contactForce(sim_->m_, sim_->d_, i, force);  // todo contact
+                mjtNum force[6];  // 包含法向力和摩擦力的 6D 力
+                mj_contactForce(sim_->m_, sim_->d_, i, force);
 
-                // 将接触力填入消息的 data 部分
-                msg.ground_reaction_force.insert(msg.ground_reaction_force.end(), force, force + 3);
+                // 将接触力存入对应腿的位置(每条腿3维力)
+                contact_forces[foot_idx * 3] = force[0];
+                contact_forces[foot_idx * 3 + 1] = force[1];
+                contact_forces[foot_idx * 3 + 2] = force[2];
             }
         }
     }
+
+    // 将接触力和接触状态填入消息
+    msg.ground_reaction_force = contact_forces;
     for (int i = 0; i < 4; i++)
     {
         msg.contact_state[i] = contact_state[i];
     }
-    
-    // 将接触状态数组填入消息
+
     mujoco_msg_publisher_->publish(msg);
 }
 
@@ -184,7 +199,8 @@ void MujocoMsgHandler::joint_callback()
     }
 }
 
-void MujocoMsgHandler::actuator_cmd_callback(const custom_msgs::msg::ActuatorCmds::SharedPtr msg) const
+void MujocoMsgHandler::actuator_cmd_callback(
+    const custom_msgs::msg::ActuatorCmds::SharedPtr msg) const
 {
     if (!sim_ || !sim_->d_ || !sim_->m_)
     {
@@ -199,7 +215,9 @@ void MujocoMsgHandler::actuator_cmd_callback(const custom_msgs::msg::ActuatorCmd
 
         if (actuator_id == -1)
         {
-            RCLCPP_WARN(rclcpp::get_logger("MuJoCo"), "Actuator '%s' not found in MuJoCo model.", actuator_name.c_str());
+            RCLCPP_WARN(rclcpp::get_logger("MuJoCo"),
+                        "Actuator '%s' not found in MuJoCo model.",
+                        actuator_name.c_str());
             continue;
         }
         // Get the joint position and velocity directly from qpos and qvel
@@ -210,11 +228,13 @@ void MujocoMsgHandler::actuator_cmd_callback(const custom_msgs::msg::ActuatorCmd
         double position_error = msg->pos[k] - joint_position;
         double velocity_error = msg->vel[k] - joint_velocity;
 
-        sim_->d_->ctrl[actuator_id] = msg->kp[k] * position_error + msg->kd[k] * velocity_error + msg->torque[k];
+        sim_->d_->ctrl[actuator_id] =
+            msg->kp[k] * position_error + msg->kd[k] * velocity_error + msg->torque[k];
 
         // Apply torque limits dynamically from the message
         double torque_limit = msg->torque_limit[k];
-        sim_->d_->ctrl[actuator_id] = std::clamp(sim_->d_->ctrl[actuator_id], -torque_limit, torque_limit);
+        sim_->d_->ctrl[actuator_id] =
+            std::clamp(sim_->d_->ctrl[actuator_id], -torque_limit, torque_limit);
     }
 }
 

@@ -29,13 +29,13 @@ AlignTrailingComments: true
 AllowAllParametersOfDeclarationOnNextLine: false
 
 # 允许短的块放在同一行
-AllowShortBlocksOnASingleLine: true
+AllowShortBlocksOnASingleLine: false
 
 # 允许短的case标签放在同一行
 AllowShortCaseLabelsOnASingleLine: true
 
 # 允许短的函数放在同一行
-AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortFunctionsOnASingleLine: None
 
 # 允许短的if语句保持在同一行
 AllowShortIfStatementsOnASingleLine: true
@@ -61,25 +61,31 @@ BinPackParameters: false
 # 大括号换行，只有当 BreakBeforeBraces 设置为Custom时才有效
 BraceWrapping:
   # class定义后面
-  AfterClass: false
+  AfterClass: true
   # 控制语句后面
-  AfterControlStatement: false
+  AfterControlStatement: true
   # enum定义后面
-  AfterEnum: false
+  AfterEnum: true
   # 函数定义后面
-  AfterFunction: false
+  AfterFunction: true
   # 命名空间定义后面
-  AfterNamespace: false
+  AfterNamespace: true
   # struct定义后面
-  AfterStruct: false
+  AfterStruct: true
   # union定义后面
-  AfterUnion: false
+  AfterUnion: true
   # catch之前
-  BeforeCatch: false
+  BeforeCatch: true
   # else之前
-  BeforeElse: false
+  BeforeElse: true
   # 缩进大括号
   IndentBraces: false
+  # 分割空函数
+  SplitEmptyFunction: true
+  # 分割空记录
+  SplitEmptyRecord: true
+  # 分割空命名空间
+  SplitEmptyNamespace: true
 
 # 在二元运算符前换行
 BreakBeforeBinaryOperators: NonAssignment
@@ -97,5 +103,11 @@ BreakBeforeTernaryOperators: true
 IndentWidth: 4
 
 # 设置行宽以适应窗口
-ColumnLimit: 0
+ColumnLimit: 100
+
+# 初始化列表相关配置
+BreakConstructorInitializers: BeforeColon  # 在冒号前换行
+ConstructorInitializerAllOnOneLineOrOnePerLine: false  # 不允许所有初始化器在同一行
+ConstructorInitializerIndentWidth: 4  # 初始化列表缩进宽度
+PackConstructorInitializers: Never  # 永不打包初始化器到一行
 

@@ -6,15 +6,13 @@
 #define UTILFUNC_H
 
 #include <Eigen/Dense>
-#include <vector>
-#include <type_traits>
-
 #include <std_msgs/msg/float64_multi_array.hpp>
+#include <type_traits>
+#include <vector>
 
 template <typename Derived>
-void eigenToFloat64MultiArray(
-    const Eigen::MatrixBase<Derived>& matrix,
-    std_msgs::msg::Float64MultiArray& msg)
+void eigenToFloat64MultiArray(const Eigen::MatrixBase<Derived>& matrix,
+                              std_msgs::msg::Float64MultiArray& msg)
 {
     // 设置维度
     msg.layout.dim.resize(2);
@@ -27,19 +25,18 @@ void eigenToFloat64MultiArray(
     msg.data.resize(matrix.size());
 
     // 使用Map直接映射内存
-    Eigen::Map<Eigen::Matrix<double, Derived::RowsAtCompileTime,
-                             Derived::ColsAtCompileTime>>(msg.data.data(), matrix.rows(), matrix.cols()) = matrix;
+    Eigen::Map<Eigen::Matrix<double, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>(
+        msg.data.data(), matrix.rows(), matrix.cols()) = matrix;
 }
 
 // 反向转换函数
 template <typename Derived>
-void float64MultiArrayToEigen(
-    const std_msgs::msg::Float64MultiArray& msg,
-    Eigen::MatrixBase<Derived>& matrix_out)
+void float64MultiArrayToEigen(const std_msgs::msg::Float64MultiArray& msg,
+                              Eigen::MatrixBase<Derived>& matrix_out)
 {
-    matrix_out.derived() =
-        Eigen::Map<const Eigen::Matrix<double, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>
-        (msg.data.data(), msg.layout.dim[0].size, msg.layout.dim[1].size);
+    matrix_out.derived() = Eigen::Map<
+        const Eigen::Matrix<double, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>(
+        msg.data.data(), msg.layout.dim[0].size, msg.layout.dim[1].size);
 }
 
 // 通用模板函数：将Eigen矩阵转换为std::vector
@@ -56,13 +53,14 @@ std::vector<typename Derived::Scalar> eigenToStdVector(const Eigen::MatrixBase<D
 
 // 通用模板函数：将std::vector转换为Eigen矩阵
 template <typename Scalar>
-Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> stdVectorToEigen(
-    const std::vector<Scalar>& vec, size_t rows, size_t cols)
+Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>
+stdVectorToEigen(const std::vector<Scalar>& vec, size_t rows, size_t cols)
 {
     // 检查输入数据大小是否匹配指定的矩阵维度
     if (vec.size() != rows * cols)
     {
-        throw std::runtime_error("Size of std::vector does not match the specified matrix dimensions.");
+        throw std::runtime_error("Matrix size mismatch: expected " + std::to_string(rows * cols)
+                                 + ", got " + std::to_string(vec.size()));
     }
 
     // 构造Eigen矩阵并将数据以列优先顺序填充
@@ -75,7 +73,7 @@ Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> stdVectorToEigen(
 #include "sophus/se3.hpp"
 #include "sophus/so3.hpp"
 
-//Sophus SE3 vee hat 向量顺序是先平移后旋转
+// Sophus SE3 vee hat 向量顺序是先平移后旋转
 class UtilFnc
 {
 public:
@@ -98,8 +96,8 @@ public:
     static Eigen::Matrix<double, 6, 6> adjoint_se3(const Eigen::Matrix<double, 6, 1>& xi)
     {
         // 提取旋转部分和平移部分
-        Eigen::Vector3d omega = xi.head<3>(); // 旋转部分
-        Eigen::Vector3d v = xi.tail<3>(); // 平移部分
+        Eigen::Vector3d omega = xi.head<3>();  // 旋转部分
+        Eigen::Vector3d v = xi.tail<3>();      // 平移部分
 
         // 计算\text{ad}_{\xi}矩阵
         Eigen::Matrix<double, 6, 6> ad_xi;
@@ -115,8 +113,8 @@ public:
     {
         const Eigen::Matrix<double, 4, 4> eye = Eigen::Matrix4d::Identity();
 
-        Eigen::Matrix<double, 4, 4> g = (eye - 0.5 * hat2SE3(xi)).inverse() * (eye + 0.5 *
-            hat2SE3(xi));
+        Eigen::Matrix<double, 4, 4> g =
+            (eye - 0.5 * hat2SE3(xi)).inverse() * (eye + 0.5 * hat2SE3(xi));
         // Eigen::Quaterniond q(g.topLeftCorner<3, 3>());
         // g.topLeftCorner<3, 3>() = q.toRotationMatrix(); //保证旋转矩阵正交，但是会损失一点精度
 
@@ -128,9 +126,8 @@ public:
         const Eigen::Matrix<double, 4, 4> eye = Eigen::Matrix4d::Identity();
 
         Eigen::Matrix<double, 6, 1> xi = vee2se3(2 * (g - eye) * (g + eye).inverse());
-        return xi; //Rz!=pi
+        return xi;  // Rz!=pi
     }
-
 
     static Eigen::Vector3d normalizeAngles(const Eigen::Vector3d& angles)
     {
@@ -154,7 +151,8 @@ public:
         Eigen::Vector3d closestAngles;
         for (int i = 0; i < 3; ++i)
         {
-            double wrappedCurrent = std::fmod(currentAngles[i] + M_PI, 2 * M_PI) - M_PI; // 将角度限制在[-π, π]
+            double wrappedCurrent =
+                std::fmod(currentAngles[i] + M_PI, 2 * M_PI) - M_PI;  // 将角度限制在[-π, π]
             double wrappedPrevious = std::fmod(previousAngles[i] + M_PI, 2 * M_PI) - M_PI;
 
             // 计算两个可能的差异
@@ -178,4 +176,4 @@ public:
         return closestAngles;
     }
 };
-#endif //UTILFUNC_H
+#endif  // UTILFUNC_H

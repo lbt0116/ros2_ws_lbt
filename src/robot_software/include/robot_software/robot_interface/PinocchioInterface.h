@@ -13,8 +13,8 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
 #include "robot_software/robot_utils/DataCenter.hpp"
+#include "robot_software/robot_utils/DataTypes.hpp"
 #include "robot_software/robot_utils/MatrixTypes.h"
-#include "robot_software/robot_utils/data_types.hpp"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 namespace Galileo

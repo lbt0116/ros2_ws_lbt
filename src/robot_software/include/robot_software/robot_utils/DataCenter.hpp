@@ -3,8 +3,7 @@
 #include <atomic>
 #include <concepts>
 #include <memory>
-
-// #include "robot_software/robot_utils/data_types.hpp"
+#include "robot_software/robot_utils/DataTypes.hpp"
 
 // 定义可存储数据类型的概念
 namespace Galileo
