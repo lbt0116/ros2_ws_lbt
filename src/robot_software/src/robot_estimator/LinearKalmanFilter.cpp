@@ -40,7 +40,7 @@ void LinearKalmanFilter::updateStateTransitionMatrix()
     // 位置更新
     F_.block<3, 3>(0, 6) = Eigen::Matrix3d::Identity() * DT;
 
-    // 速度保持不变
+    // 速度保���不变
     // 角度保持不变
 }
 
@@ -78,12 +78,23 @@ void LinearKalmanFilter::update(const Eigen::Vector3d& measured_angle,
     // 更新状态
     x_ += K * (z - H_ * x_);
 
-    // 更新协方差
+    // ���新协方差
     Eigen::Matrix<double, STATE_DIM, STATE_DIM> I = Eigen::Matrix<double, STATE_DIM, STATE_DIM>::Identity();
     P_ = (I - K * H_) * P_;
 
     // 标准化角度到[-pi, pi]
     x_.segment<3>(3) = UtilFnc::normalizeAngles(x_.segment<3>(3));
+}
+
+void LinearKalmanFilter::run(const Eigen::Vector3d& measured_acc,
+                             const Eigen::Vector3d& measured_angle,
+                             const Eigen::Vector3d& measured_velocity)
+{
+    // 预测步骤
+    predict(measured_acc);
+
+    // 更新步骤
+    update(measured_angle, measured_velocity);
 }
 
 }  // namespace Galileo

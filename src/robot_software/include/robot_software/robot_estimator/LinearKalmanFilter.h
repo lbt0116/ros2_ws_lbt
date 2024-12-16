@@ -50,6 +50,11 @@ public:
     Eigen::Vector3d getPosition() const { return x_.segment<3>(0); }
     Eigen::Vector3d getAngle() const { return x_.segment<3>(3); }
     Eigen::Vector3d getVelocity() const { return x_.segment<3>(6); }
+
+    // 统一的入口函数
+    void run(const Eigen::Vector3d& measured_acc,
+             const Eigen::Vector3d& measured_angle,
+             const Eigen::Vector3d& measured_velocity);
 };
 
 }  // namespace Galileo

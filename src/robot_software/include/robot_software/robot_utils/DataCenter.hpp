@@ -3,17 +3,14 @@
 #include <atomic>
 #include <concepts>
 #include <memory>
-#include <stdexcept>
-#include <string_view>
-#include <type_traits>
-#include <typeindex>
-#include <unordered_map>
 
+// #include "robot_software/robot_utils/data_types.hpp"
+
+// 定义可存储数据类型的概念
 namespace Galileo
 {
-
 template <typename T>
-concept CopyConstructible = std::is_copy_constructible_v<std::remove_reference_t<T>>;
+concept StorableData = std::is_default_constructible_v<T> && std::is_copy_constructible_v<T>;
 
 class DataCenter
 {
@@ -24,39 +21,19 @@ public:
         return instance;
     }
 
-    // 通用的设置数据方法
-    template <CopyConstructible T>
-    void setData(T&& data)
+    // 通用写入接口
+    template <StorableData T>
+    void write(const T& data)
     {
-        using DataType = std::remove_reference_t<T>;
-        auto ptr = std::make_shared<DataType>(std::forward<T>(data));
-        auto void_ptr = std::shared_ptr<void>(ptr, ptr.get());
-        data_map_[std::type_index(typeid(DataType))].store(void_ptr);
+        auto new_data = std::make_shared<T>(data);
+        getData<T>().store(new_data);
     }
 
-    // 通用的获取数据方法
-    template <typename T>
-    std::shared_ptr<T> getData() const
+    // 通用读取接口
+    template <StorableData T>
+    std::shared_ptr<T> read() const
     {
-        using DataType = std::remove_reference_t<T>;
-        auto it = data_map_.find(std::type_index(typeid(DataType)));
-        if (it == data_map_.end())
-        {
-            return nullptr;
-        }
-
-        auto void_ptr = it->second.load();
-        if (!void_ptr)
-        {
-            return nullptr;
-        }
-
-        auto result = std::static_pointer_cast<DataType>(void_ptr);
-        if (!result)
-        {
-            throw std::runtime_error("类型转换失败，请检查数据类型是否匹配");
-        }
-        return result;
+        return getData<T>().load();
     }
 
 private:
@@ -65,7 +42,26 @@ private:
     DataCenter(const DataCenter&) = delete;
     DataCenter& operator=(const DataCenter&) = delete;
 
-    mutable std::unordered_map<std::type_index, std::atomic<std::shared_ptr<void>>> data_map_;
+    // 获取对应类型的原子智能指针
+    template <StorableData T>
+    std::atomic<std::shared_ptr<T>>& getData()
+    {
+        return data_storage<T>;
+    }
+
+    template <StorableData T>
+    const std::atomic<std::shared_ptr<T>>& getData() const
+    {
+        return data_storage<T>;
+    }
+
+    // 每个类型对应一个静态原子智能指针
+    template <StorableData T>
+    static std::atomic<std::shared_ptr<T>> data_storage;
 };
+
+// 静态成员定义
+template <StorableData T>
+std::atomic<std::shared_ptr<T>> DataCenter::data_storage;
 
 }  // namespace Galileo

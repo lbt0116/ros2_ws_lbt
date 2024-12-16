@@ -165,7 +165,8 @@ void PinocchioInterface::PinocchioInterfaceImpl::update_pinocchio(PinocchioInter
 }
 
 PinocchioInterface::PinocchioInterface()
-    : impl_(std::make_unique<PinocchioInterfaceImpl>())
+    : impl_(std::make_unique<PinocchioInterfaceImpl>()),
+      dataCenter(DataCenter::getInstance())
 {
 }
 
