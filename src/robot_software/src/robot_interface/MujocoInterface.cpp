@@ -9,7 +9,7 @@ using namespace std::chrono_literals;
 namespace Galileo
 {
 MujocoInterface::MujocoInterface()
-    : Node("interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
+    : Node("mujoco_interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
       dataCenter(DataCenter::getInstance())
 {
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);

@@ -12,11 +12,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         # 声明一个启动参数
-        DeclareLaunchArgument(
-            'launch_subscriber',
-            default_value='false',
-            description='Whether to launch the subscriber node'
-        ),
+
 
         # SetEnvironmentVariable(
         #     'RCUTILS_CONSOLE_OUTPUT_FORMAT',
@@ -31,26 +27,17 @@ def generate_launch_description():
             output='screen'
         ),
 
-        # 订阅者节点，使用条件启动
-        Node(
-            package='my_subscriber',
-            executable='subscriber_node',
-            name='custom_subscriber',
-            output='screen',
-            condition=IfCondition(launch_subscriber)
-        ),
-        # 发布者节点
+        # mujoco node
         Node(
             package='mujoco_node',
             executable='mujoco_node',
             name='MujocoMsgHandler',
             output='screen'
         ),
-        # estimate node
+        # main node
         Node(
             package='robot_software',
             executable='main_app',
-            name='estimate_node',
             output='screen'
         ),
         Node(

@@ -23,16 +23,18 @@ int main(int argc, char* argv[])
     // 设置环境变量启用颜色输出
     setenv("RCUTILS_COLORIZED_OUTPUT", "1", 1);
     rclcpp::init(argc, argv);
-    rclcpp::executors::SingleThreadedExecutor executor;
 
-    // auto Pin_ptr_ = std::make_shared<Galileo::PinocchioInterface>();
+    // 静态单线程执行器 省去动态管理节点的开销
+    rclcpp::executors::StaticSingleThreadedExecutor executor;
 
     const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterface>();
     const auto PinocchioInterfaceNode = std::make_shared<Galileo::PinocchioInterface>();
     const auto RobotEstimatorNode = std::make_shared<Galileo::RobotEstimatorNode>();
+
     executor.add_node(RobotInterfaceNode);
     executor.add_node(PinocchioInterfaceNode);
     executor.add_node(RobotEstimatorNode);
+
     executor.spin();
     rclcpp::shutdown();
     return 0;

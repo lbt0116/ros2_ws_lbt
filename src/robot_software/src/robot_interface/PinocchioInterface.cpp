@@ -179,7 +179,7 @@ void PinocchioInterface::PinocchioInterfaceImpl::update_pinocchio(PinocchioInter
 }
 
 PinocchioInterface::PinocchioInterface()
-    : Node("interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
+    : Node("pinocchio_interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
       impl_(std::make_unique<PinocchioInterfaceImpl>()),
       dataCenter(DataCenter::getInstance())
 {
