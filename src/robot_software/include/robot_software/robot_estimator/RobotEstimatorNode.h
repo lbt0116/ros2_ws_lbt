@@ -25,7 +25,7 @@ namespace Galileo
 class RobotEstimatorNode : public rclcpp::Node
 {
 public:
-    RobotEstimatorNode(std::shared_ptr<PinocchioInterface> pinocchio_interface);  //
+    RobotEstimatorNode();  //
     ~RobotEstimatorNode() override = default;
 
 private:
@@ -33,7 +33,6 @@ private:
     std::shared_ptr<EskfOnSe3> eskf_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<custom_msgs::msg::RobotStateMsg>::SharedPtr statePub_;
-    std::shared_ptr<PinocchioInterface> pinocchioInterface_;
 };
 }  // namespace Galileo
 

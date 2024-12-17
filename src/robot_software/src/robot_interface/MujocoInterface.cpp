@@ -8,9 +8,8 @@ using namespace std::chrono_literals;
 
 namespace Galileo
 {
-MujocoInterface::MujocoInterface(std::shared_ptr<PinocchioInterface> pinocchio_interface)
+MujocoInterface::MujocoInterface()
     : Node("interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
-      pinocchioInterface_(std::move(pinocchio_interface)),
       dataCenter(DataCenter::getInstance())
 {
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
@@ -26,6 +25,8 @@ MujocoInterface::MujocoInterface(std::shared_ptr<PinocchioInterface> pinocchio_i
         qos,
         std::bind(&MujocoInterface::sub_mujoco_callback, this, std::placeholders::_1));
 
+    triggerPub_ = this->create_publisher<std_msgs::msg::Bool>("trigger", qos);
+
     // 创建近似时间同步器，队列大小为10，允许最大时间偏差为1ms
     sync_policy_ = std::make_shared<SyncPolicy>(3);
     sync_policy_->setMaxIntervalDuration(1ms);  // 允许最大同步偏差为 1ms
@@ -36,18 +37,10 @@ MujocoInterface::MujocoInterface(std::shared_ptr<PinocchioInterface> pinocchio_i
     // 注册同步回调函数
     synchronizer_->registerCallback(std::bind(
         &MujocoInterface::sub_sensor_callback, this, std::placeholders::_1, std::placeholders::_2));
-
-    // synchronizer_->registerCallback(
-    //     [this](const sensor_msgs::msg::Imu::SharedPtr imu_msg,
-    //            const sensor_msgs::msg::JointState::SharedPtr joint_state_msg)
-    //     {
-    //         this->sub_sensor_callback(imu_msg, joint_state_msg);
-    //     });
 }
 
 void MujocoInterface::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
 {
-    pinocchioInterface_->set_mujoco_msg(msg);
     robot_state::ContactState contactState;
     contactState.isContact << msg->contact_state[0], msg->contact_state[1], msg->contact_state[2],
         msg->contact_state[3];
@@ -94,10 +87,8 @@ void MujocoInterface::sub_sensor_callback(
 
     dataCenter.write(sensorData);
 
-    // pinocchioInterface_->set_imu_msg(imu_msg);
-
-    // pinocchioInterface_->set_joint_msg(joint_state_msg);
-
-    // pinocchioInterface_->update();
+    std_msgs::msg::Bool trigger_msg;
+    trigger_msg.data = true;
+    triggerPub_->publish(trigger_msg);
 }
 }  // namespace Galileo

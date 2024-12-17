@@ -12,65 +12,44 @@
 #include "custom_msgs/msg/robot_state_msg.hpp"
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
+#include "rclcpp/rclcpp.hpp"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "robot_software/robot_utils/DataTypes.hpp"
 #include "robot_software/robot_utils/MatrixTypes.h"
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
+#include "std_msgs/msg/bool.hpp"
+
 namespace Galileo
 {
-class PinocchioInterface
+class PinocchioInterface : public rclcpp::Node
 {
 public:
     PinocchioInterface();
     ~PinocchioInterface();  // 添加析构函数声明
 
-    mat43 get();
-
-    void set_imu_msg(const sensor_msgs::msg::Imu::ConstSharedPtr& msg) const;
-    void set_joint_msg(const sensor_msgs::msg::JointState::ConstSharedPtr& msg) const;
-    void set_mujoco_msg(const custom_msgs::msg::MujocoMsg::ConstSharedPtr& msg);
-
-    // Eigen::MatrixXd get_centroidal_matrix() const;
-    //
-    // Eigen::Matrix3d get_inertia_matrix() const;
-    //
-    // Eigen::MatrixXd get_jb_matrix() const;
-    //
-    // double get_total_mass() const;
-
-    Eigen::MatrixXd get_jacobian_matrix(const int i) const;
-
     void update();
-    // ~PinocchioInterface() = default;
 
-    // Joint State
-    mat34 jonitPos;
-    mat34 jonitVelo;
+    robot_state::JointState jointState;
+    robot_state::LegState legState;
+    robot_state::BaseState baseState;
+    robot_constants robotConstants;
 
-    // Leg State
-    mat34 legPosHipInBody;
-    mat34 legPosHipInWorld;
-    mat34 legPosBaseInBody;
-    mat34 legPosBaseInWorld;
-    mat34 legVeloInBody;
-    mat34 legVeloInWorld;
-    mat34 legForceInBody;
-    mat34 legForceInWorld;
-
-    // Base State
-    mat33 baseRotationMatrix;
-    mat33 baseInertiaMatrix;
-    mat66 baseSpatialInertiaMatrix;
-
-    vec3 baseAcc;
-    vec3 baseAngVelo;
+    // const robot_state::SensorData sensorData;
 
     double totalMass;
 
 private:
     class PinocchioInterfaceImpl;
     std::unique_ptr<PinocchioInterfaceImpl> impl_;  // 使用PImpl隐藏实现细节
+
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr triggerSub_;
+    void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
+    {
+        RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
+        update();
+    };
+    // rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr triggerPub_;
     DataCenter& dataCenter;
 };
 }  // namespace Galileo

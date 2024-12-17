@@ -5,7 +5,8 @@
 #ifndef ESKFONSE3_H
 #define ESKFONSE3_H
 #include "eigen3/Eigen/Dense"
-#include "robot_software/robot_interface/PinocchioInterface.h"
+#include "robot_software/robot_utils/DataCenter.hpp"
+#include "robot_software/robot_utils/DataTypes.hpp"
 
 namespace Galileo
 {
@@ -45,6 +46,7 @@ private:
 
     // 添加更新函数声明
     void updateStates(const Eigen::Matrix<int, 4, 1>& phase);
+    DataCenter& dataCenter_;
 
 public:
     Eigen::Matrix<double, StateNum, 1> Q_vec;
@@ -66,8 +68,7 @@ public:
     Eigen::Matrix<double, 6, 1> xi;
     Eigen::Matrix<double, 6, 1> ue;
 
-    std::shared_ptr<PinocchioInterface> pin_;
-    EskfOnSe3(const std::shared_ptr<PinocchioInterface>& pin);
+    EskfOnSe3();
 
     void setTransMatrix();
     void setMeasureMatrix();

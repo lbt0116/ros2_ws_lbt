@@ -10,8 +10,8 @@
 
 namespace Galileo
 {
-EskfOnSe3::EskfOnSe3(const std::shared_ptr<PinocchioInterface>& pin)
-    : pin_(pin)
+EskfOnSe3::EskfOnSe3()
+    : dataCenter_(DataCenter::getInstance())
 {
     F_mat.setZero();
     Fk_mat.setZero();
@@ -39,14 +39,22 @@ EskfOnSe3::EskfOnSe3(const std::shared_ptr<PinocchioInterface>& pin)
 
 void EskfOnSe3::updateStates(const Eigen::Matrix<int, 4, 1>& phase)
 {
-    baseInertiaMatrix_ = pin_->baseInertiaMatrix;
-    totalMass_ = pin_->totalMass;
-    baseSpatialInertiaMatrix_ = pin_->baseSpatialInertiaMatrix;
-    legVeloInWorld_ = pin_->legVeloInWorld;
-    legForceInWorld_ = pin_->legForceInWorld;
-    baseAcc_ = pin_->baseAcc;
-    baseAngVelo_ = pin_->baseAngVelo;
-    baseRotationMatrix_ = pin_->baseRotationMatrix;
+    auto baseState = dataCenter_.read<robot_state::BaseState>();
+    auto jointState = dataCenter_.read<robot_state::JointState>();
+    auto robotConstants = dataCenter_.read<robot_constants>();
+    auto legState = dataCenter_.read<robot_state::LegState>();
+
+    totalMass_ = robotConstants->mass;
+
+    baseInertiaMatrix_ = robotConstants->inertiaMatrix;
+    baseSpatialInertiaMatrix_ = robotConstants->spatialInertiaMatrix;
+
+    baseAcc_ = baseState->acceleration;
+    baseAngVelo_ = baseState->angularVelocity;
+    baseRotationMatrix_ = baseState->rotationMatrix;
+
+    legVeloInWorld_ = legState->legVeloInWorld;
+    legForceInWorld_ = legState->legForceInWorld;
 
     vm_ = -legVeloInWorld_ * phase.cast<double>() / phase.sum();
     uc_ = legForceInWorld_ * phase.cast<double>();
@@ -64,7 +72,8 @@ void EskfOnSe3::setTransMatrix()
 
     F_mat.block(0, 0, 6, 6) = -UtilFnc::adjoint_se3(xi);
     F_mat.block(0, 6, 6, 6) = Eigen::Matrix<double, 6, 6>::Identity();
-    F_mat.block(6, 6, 6, 6) = invJb * (C_mat - (-UtilFnc::adjoint_se3(xi).transpose()) * baseSpatialInertiaMatrix_);
+    F_mat.block(6, 6, 6, 6) =
+        invJb * (C_mat - (-UtilFnc::adjoint_se3(xi).transpose()) * baseSpatialInertiaMatrix_);
     F_mat.block(6, 12, 6, 6) = invJb;
 
     Fk_mat = F_mat * 0.001 + Eigen::Matrix<double, StateNum, StateNum>::Identity();
