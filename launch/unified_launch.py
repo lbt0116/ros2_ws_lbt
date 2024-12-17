@@ -19,13 +19,7 @@ def generate_launch_description():
         #     '[{time:%Y-%m-%d %H:%M:%S}] [{name}] [{severity}]: {message}'
         # ),
 
-        # 发布者节点
-        Node(
-            package='my_publisher',
-            executable='publisher_node',
-            name='custom_publisher',
-            output='screen'
-        ),
+
 
         # mujoco node
         Node(

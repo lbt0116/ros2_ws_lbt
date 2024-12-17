@@ -12,6 +12,7 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "robot_software/robot_controller/RobotControllerNode.h"  // todo cxx20 datacenter test
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
 #include "robot_software/robot_interface/MujocoInterface.h"
 #include "robot_software/robot_utils/DataCenter.hpp"  // todo cxx20 datacenter test
@@ -30,10 +31,11 @@ int main(int argc, char* argv[])
     const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterface>();
     const auto PinocchioInterfaceNode = std::make_shared<Galileo::PinocchioInterface>();
     const auto RobotEstimatorNode = std::make_shared<Galileo::RobotEstimatorNode>();
-
+    const auto RobotControllerNode = std::make_shared<Galileo::RobotControllerNode>();
     executor.add_node(RobotInterfaceNode);
     executor.add_node(PinocchioInterfaceNode);
     executor.add_node(RobotEstimatorNode);
+    executor.add_node(RobotControllerNode);
 
     executor.spin();
     rclcpp::shutdown();
