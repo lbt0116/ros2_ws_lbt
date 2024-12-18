@@ -12,13 +12,11 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robot_software/robot_controller/RobotControllerNode.h"  // todo cxx20 datacenter test
+#include "robot_software/robot_FSM/RobotFSMNode.h"
+#include "robot_software/robot_controller/RobotControllerNode.h"
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
 #include "robot_software/robot_interface/MujocoInterface.h"
-#include "robot_software/robot_utils/DataCenter.hpp"  // todo cxx20 datacenter test
-#include "sensor_msgs/msg/imu.hpp"
-/// git test
-
+#include "robot_software/robot_planning/RobotPlanningNode.h"
 int main(int argc, char* argv[])
 {
     // 设置环境变量启用颜色输出
@@ -28,16 +26,25 @@ int main(int argc, char* argv[])
     // 静态单线程执行器 省去动态管理节点的开销
     rclcpp::executors::StaticSingleThreadedExecutor executor;
 
+    // 创建节点
     const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterface>();
     const auto PinocchioInterfaceNode = std::make_shared<Galileo::PinocchioInterface>();
     const auto RobotEstimatorNode = std::make_shared<Galileo::RobotEstimatorNode>();
+    const auto RobotFSMNode = std::make_shared<Galileo::RobotFSMNode>();
+    const auto RobotPlanningNode = std::make_shared<Galileo::RobotPlanningNode>();
     const auto RobotControllerNode = std::make_shared<Galileo::RobotControllerNode>();
+
+    // 添加节点到执行器
     executor.add_node(RobotInterfaceNode);
     executor.add_node(PinocchioInterfaceNode);
     executor.add_node(RobotEstimatorNode);
+    executor.add_node(RobotFSMNode);
+    executor.add_node(RobotPlanningNode);
     executor.add_node(RobotControllerNode);
-
+    // 启动执行器
     executor.spin();
+
+    // 关闭节点
     rclcpp::shutdown();
     return 0;
 }

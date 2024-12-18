@@ -13,14 +13,6 @@ def generate_launch_description():
     return LaunchDescription([
         # 声明一个启动参数
 
-
-        # SetEnvironmentVariable(
-        #     'RCUTILS_CONSOLE_OUTPUT_FORMAT',
-        #     '[{time:%Y-%m-%d %H:%M:%S}] [{name}] [{severity}]: {message}'
-        # ),
-
-
-
         # mujoco node
         Node(
             package='mujoco_node',

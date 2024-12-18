@@ -66,7 +66,6 @@ struct BaseState
 struct ContactState
 {
     vec4i isContact;
-    vec4i contactPhase;
 
     mat34 contactForce;
 };
@@ -91,6 +90,25 @@ struct SensorData
     double timestamp{0.0};
 };
 }  // namespace robot_estimator
+
+namespace robot_FSM
+{
+struct GaitSchedule
+{
+    Eigen::Matrix<int, Eigen::Dynamic, 4> gaitSequence;
+    double swingHeight;
+    double stand_T;
+    double swing_T;
+    int gaitTag;
+    double standHeight;
+};
+
+struct Command
+{
+    int gaitCmd;
+    Eigen::Matrix<int, 4, 1> legPhase;
+};
+}  // namespace robot_FSM
 
 // 接口相关数据结构
 namespace robot_interface

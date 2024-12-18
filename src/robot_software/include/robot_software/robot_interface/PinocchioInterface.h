@@ -28,28 +28,27 @@ public:
     PinocchioInterface();
     ~PinocchioInterface();  // 添加析构函数声明
 
-    void update();
-
+    // 关节状态
     robot_state::JointState jointState;
+    // 腿状态
     robot_state::LegState legState;
+    // 基座状态
     robot_state::BaseState baseState;
+    // 机器人常量
     robot_constants robotConstants;
 
-    // const robot_state::SensorData sensorData;
-
-    double totalMass;
-
 private:
+    // PImpl 模式
     class PinocchioInterfaceImpl;
     std::unique_ptr<PinocchioInterfaceImpl> impl_;  // 使用PImpl隐藏实现细节
 
+    // 订阅触发信号
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr triggerSub_;
-    void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
-    {
-        RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
-        update();
-    };
-    // rclcpp::Publisher<std_msgs::msg::Bool>::SharedPtr triggerPub_;
+
+    // 触发信号回调函数
+    void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg);
+
+    // 数据中心
     DataCenter& dataCenter;
 };
 }  // namespace Galileo

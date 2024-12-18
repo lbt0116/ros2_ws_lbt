@@ -5,7 +5,8 @@ using namespace std::chrono_literals;
 namespace Galileo
 {
 RobotControllerNode::RobotControllerNode()
-    : Node("robot_controller")
+    : Node("robot_controller", rclcpp::NodeOptions().use_intra_process_comms(true)),
+      dataCenter(DataCenter::getInstance())
 {
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
     publisher_ = this->create_publisher<custom_msgs::msg::ActuatorCmds>("actuators_cmds", qos);
@@ -24,6 +25,17 @@ RobotControllerNode::RobotControllerNode()
                     "Abd4Joint",
                     "Hip4Joint",
                     "Knee4Joint"};
+
+    triggerSub_ = this->create_subscription<std_msgs::msg::Bool>(
+        "trigger",
+        rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data),
+        std::bind(
+            &RobotControllerNode::trigger_callback, this, std::placeholders::_1));  // 订阅触发信号
+}
+
+void RobotControllerNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
+{
+    RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
 }
 
 void RobotControllerNode::publish_commands()
@@ -55,6 +67,6 @@ void RobotControllerNode::publish_commands()
     }
 
     publisher_->publish(msg);
-    RCLCPP_INFO(this->get_logger(), "Published actuator commands %.3f", msg.torque[0]);
+    // RCLCPP_INFO(this->get_logger(), "Published actuator commands %.3f", msg.torque[0]);
 }
 }  // namespace Galileo

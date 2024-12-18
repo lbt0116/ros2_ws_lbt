@@ -194,8 +194,10 @@ PinocchioInterface::~PinocchioInterface() = default;
 // 析构函数的实现必须在cpp文件中,因为此时已经有了完整的PinocchioInterfaceImpl类型定义
 // 这样可以解决不完整类型的问题
 
-void PinocchioInterface::update()
+void PinocchioInterface::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
+    RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
     impl_->update_pinocchio(this);
 }
+
 }  // namespace Galileo

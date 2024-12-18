@@ -29,10 +29,17 @@ public:
     ~RobotEstimatorNode() override = default;
 
 private:
-    void pub_estimation_callback();
+    // 扩展卡尔曼滤波器
     std::shared_ptr<EskfOnSe3> eskf_;
-    rclcpp::TimerBase::SharedPtr timer_;
-    rclcpp::Publisher<custom_msgs::msg::RobotStateMsg>::SharedPtr statePub_;
+
+    // 订阅触发信号
+    rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr triggerSub_;
+
+    // 触发信号回调函数
+    void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg);
+
+    // 数据中心
+    DataCenter& dataCenter;
 };
 }  // namespace Galileo
 

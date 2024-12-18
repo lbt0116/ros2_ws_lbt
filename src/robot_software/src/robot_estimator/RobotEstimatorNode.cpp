@@ -11,22 +11,21 @@ namespace Galileo
 {
 RobotEstimatorNode::RobotEstimatorNode()
     : Node("estimate_node", rclcpp::NodeOptions().use_intra_process_comms(true)),
-      eskf_(std::make_shared<EskfOnSe3>())
+      eskf_(std::make_shared<EskfOnSe3>()),
+      dataCenter(DataCenter::getInstance())
 {
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
 
-    statePub_ = this->create_publisher<custom_msgs::msg::RobotStateMsg>("robotstate_msg", qos);
-
-    timer_ =
-        this->create_wall_timer(1ms, std::bind(&RobotEstimatorNode::pub_estimation_callback, this));
+    triggerSub_ = this->create_subscription<std_msgs::msg::Bool>(
+        "trigger",
+        rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data),
+        std::bind(
+            &RobotEstimatorNode::trigger_callback, this, std::placeholders::_1));  // 订阅触发信号
 }
 
-void RobotEstimatorNode::pub_estimation_callback()
+void RobotEstimatorNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
-    auto msg = custom_msgs::msg::RobotStateMsg();
-    vec4i phase = {1, 1, 1, 1};  // todo phase
-    // eskf_->run(phase);
-
-    statePub_->publish(msg);
+    RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
+    // eskf_->run(msg->data);
 }
 }  // namespace Galileo
