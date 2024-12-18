@@ -14,7 +14,7 @@
 #include "message_filters/sync_policies/approximate_time.h"
 #include "message_filters/synchronizer.h"
 #include "rclcpp/rclcpp.hpp"
-#include "robot_software/robot_interface/PinocchioInterface.h"
+#include "robot_software/robot_interface/PinocchioInterfaceNode.h"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "robot_software/robot_utils/MatrixTypes.h"
 #include "robot_software/robot_utils/UtilFunc.h"
@@ -24,11 +24,11 @@
 
 namespace Galileo
 {
-class MujocoInterface : public rclcpp::Node
+class MujocoInterfaceNode : public rclcpp::Node
 {
 public:
-    MujocoInterface();  //
-    ~MujocoInterface() override = default;
+    MujocoInterfaceNode();  //
+    ~MujocoInterfaceNode() override = default;
 
 private:
     void sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg);

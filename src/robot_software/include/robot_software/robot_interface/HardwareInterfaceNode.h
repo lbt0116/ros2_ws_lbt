@@ -7,7 +7,7 @@
 
 namespace Galileo {
 
-class HardwareInterface {
+class HardwareInterfaceNode {
 
 };
 

@@ -15,7 +15,9 @@
 #include "robot_software/robot_FSM/RobotFSMNode.h"
 #include "robot_software/robot_controller/RobotControllerNode.h"
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
-#include "robot_software/robot_interface/MujocoInterface.h"
+#include "robot_software/robot_interface/MujocoInterfaceNode.h"
+#include "robot_software/robot_interface/PinocchioInterfaceNode.h"
+#include "robot_software/robot_interface/UserInterfaceNode.h"
 #include "robot_software/robot_planning/RobotPlanningNode.h"
 int main(int argc, char* argv[])
 {
@@ -27,13 +29,13 @@ int main(int argc, char* argv[])
     rclcpp::executors::StaticSingleThreadedExecutor executor;
 
     // 创建节点
-    const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterface>();
-    const auto PinocchioInterfaceNode = std::make_shared<Galileo::PinocchioInterface>();
+    const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterfaceNode>();
+    const auto PinocchioInterfaceNode = std::make_shared<Galileo::PinocchioInterfaceNode>();
     const auto RobotEstimatorNode = std::make_shared<Galileo::RobotEstimatorNode>();
     const auto RobotFSMNode = std::make_shared<Galileo::RobotFSMNode>();
     const auto RobotPlanningNode = std::make_shared<Galileo::RobotPlanningNode>();
     const auto RobotControllerNode = std::make_shared<Galileo::RobotControllerNode>();
-
+    const auto UserInterfaceNode = std::make_shared<Galileo::UserInterfaceNode>();
     // 添加节点到执行器
     executor.add_node(RobotInterfaceNode);
     executor.add_node(PinocchioInterfaceNode);
@@ -41,6 +43,7 @@ int main(int argc, char* argv[])
     executor.add_node(RobotFSMNode);
     executor.add_node(RobotPlanningNode);
     executor.add_node(RobotControllerNode);
+    executor.add_node(UserInterfaceNode);
     // 启动执行器
     executor.spin();
 

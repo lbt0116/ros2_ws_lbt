@@ -2,13 +2,13 @@
 // Created by lbt on 24-12-11.
 //
 
-#include "robot_software/robot_interface/MujocoInterface.h"
+#include "robot_software/robot_interface/MujocoInterfaceNode.h"
 
 using namespace std::chrono_literals;
 
 namespace Galileo
 {
-MujocoInterface::MujocoInterface()
+MujocoInterfaceNode::MujocoInterfaceNode()
     : Node("mujoco_interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
       dataCenter(DataCenter::getInstance())
 {
@@ -23,7 +23,7 @@ MujocoInterface::MujocoInterface()
     mujocoSub_ = this->create_subscription<custom_msgs::msg::MujocoMsg>(
         "mujoco_msg",
         qos,
-        std::bind(&MujocoInterface::sub_mujoco_callback, this, std::placeholders::_1));
+        std::bind(&MujocoInterfaceNode::sub_mujoco_callback, this, std::placeholders::_1));
 
     triggerPub_ = this->create_publisher<std_msgs::msg::Bool>("trigger", qos);
 
@@ -36,10 +36,10 @@ MujocoInterface::MujocoInterface()
 
     // 注册同步回调函数
     synchronizer_->registerCallback(std::bind(
-        &MujocoInterface::sub_sensor_callback, this, std::placeholders::_1, std::placeholders::_2));
+        &MujocoInterfaceNode::sub_sensor_callback, this, std::placeholders::_1, std::placeholders::_2));
 }
 
-void MujocoInterface::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
+void MujocoInterfaceNode::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
 {
     robot_state::ContactState contactState;
     contactState.isContact << msg->contact_state[0], msg->contact_state[1], msg->contact_state[2],
@@ -59,7 +59,7 @@ void MujocoInterface::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::Sha
                 contactState.isContact(3));
 }
 
-void MujocoInterface::sub_sensor_callback(
+void MujocoInterfaceNode::sub_sensor_callback(
     const sensor_msgs::msg::Imu::ConstSharedPtr& imu_msg,
     const sensor_msgs::msg::JointState::ConstSharedPtr& joint_state_msg) const
 {

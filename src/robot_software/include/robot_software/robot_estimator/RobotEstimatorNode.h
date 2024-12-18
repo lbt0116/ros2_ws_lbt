@@ -12,7 +12,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "robot_software/robot_estimator/EskfOnSe3.h"
 #include "robot_software/robot_estimator/LinearKalmanFilter.h"
-#include "robot_software/robot_interface/PinocchioInterface.h"
+#include "robot_software/robot_interface/PinocchioInterfaceNode.h"
 #include "robot_software/robot_utils/MatrixTypes.h"
 #include "robot_software/robot_utils/UtilFunc.h"
 #include "sensor_msgs/msg/imu.hpp"

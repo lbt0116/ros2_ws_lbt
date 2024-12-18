@@ -1,7 +1,7 @@
 //
 // Created by lbt on 24-12-9.
 //
-#include "robot_software/robot_interface/PinocchioInterface.h"
+#include "robot_software/robot_interface/PinocchioInterfaceNode.h"
 
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/fwd.hpp>
@@ -23,7 +23,7 @@ namespace pin = pinocchio;
 
 namespace Galileo
 {
-class PinocchioInterface::PinocchioInterfaceImpl
+class PinocchioInterfaceNode::PinocchioInterfaceImpl
 {
 public:
     PinocchioInterfaceImpl();
@@ -41,13 +41,13 @@ public:
     Matrix<double, 18, 1> ddq;
     Matrix<double, 6, 18> Jacobian[4];
 
-    void update_pinocchio(PinocchioInterface* pin_);
+    void update_pinocchio(PinocchioInterfaceNode* pin_);
 
     pinocchio::Model model;  // Pinocchio的Model
     pinocchio::Data data;    // Pinocchio的Data
 };
 
-PinocchioInterface::PinocchioInterfaceImpl::PinocchioInterfaceImpl()
+PinocchioInterfaceNode::PinocchioInterfaceImpl::PinocchioInterfaceImpl()
 {
     const std::string urdf_filename =
         std::string("/home/lbt/ros2_ws/src/mujoco_node/models/quadruped/urdf/quadruped.urdf");
@@ -55,7 +55,7 @@ PinocchioInterface::PinocchioInterfaceImpl::PinocchioInterfaceImpl()
     data = pinocchio::Data(model);
 }
 
-void PinocchioInterface::PinocchioInterfaceImpl::update_pinocchio(PinocchioInterface* pin_)
+void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioInterfaceNode* pin_)
 {
     auto sensorData = pin_->dataCenter.read<robot_state::SensorData>();  // read
                                                                          // 返回的是一个智能指针
@@ -178,7 +178,7 @@ void PinocchioInterface::PinocchioInterfaceImpl::update_pinocchio(PinocchioInter
     pin_->dataCenter.write(pin_->legState);
 }
 
-PinocchioInterface::PinocchioInterface()
+PinocchioInterfaceNode::PinocchioInterfaceNode()
     : Node("pinocchio_interface", rclcpp::NodeOptions().use_intra_process_comms(true)),
       impl_(std::make_unique<PinocchioInterfaceImpl>()),
       dataCenter(DataCenter::getInstance())
@@ -186,15 +186,15 @@ PinocchioInterface::PinocchioInterface()
     triggerSub_ = this->create_subscription<std_msgs::msg::Bool>(
         "trigger",
         rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data),
-        std::bind(&PinocchioInterface::trigger_callback, this, std::placeholders::_1));
+        std::bind(&PinocchioInterfaceNode::trigger_callback, this, std::placeholders::_1));
 }
 
-PinocchioInterface::~PinocchioInterface() = default;
+PinocchioInterfaceNode::~PinocchioInterfaceNode() = default;
 // 当使用unique_ptr管理PImpl类时,需要在头文件中声明析构函数
 // 析构函数的实现必须在cpp文件中,因为此时已经有了完整的PinocchioInterfaceImpl类型定义
 // 这样可以解决不完整类型的问题
 
-void PinocchioInterface::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
+void PinocchioInterfaceNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
     RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
     impl_->update_pinocchio(this);

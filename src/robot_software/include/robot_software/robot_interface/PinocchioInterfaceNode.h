@@ -22,11 +22,11 @@
 
 namespace Galileo
 {
-class PinocchioInterface : public rclcpp::Node
+class PinocchioInterfaceNode : public rclcpp::Node
 {
 public:
-    PinocchioInterface();
-    ~PinocchioInterface();  // 添加析构函数声明
+    PinocchioInterfaceNode();
+    ~PinocchioInterfaceNode();  // 添加析构函数声明
 
     // 关节状态
     robot_state::JointState jointState;

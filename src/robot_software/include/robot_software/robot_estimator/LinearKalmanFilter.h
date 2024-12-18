@@ -3,7 +3,7 @@
 
 #include <Eigen/Dense>
 
-#include "robot_software/robot_interface/PinocchioInterface.h"
+#include "robot_software/robot_interface/PinocchioInterfaceNode.h"
 
 namespace Galileo
 {
