@@ -2,7 +2,7 @@ from launch.actions import DeclareLaunchArgument, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-
+from launch.actions import ExecuteProcess
 from launch import LaunchDescription
 
 
@@ -32,5 +32,9 @@ def generate_launch_description():
             name='foxglove_bridge',
             output='screen',
             parameters=[]
+        ),
+        ExecuteProcess(
+            cmd=['warp-terminal', '--', 'ros2', 'run', 'keyboard_control', 'keyboard_publisher'],
+            output='screen'
         )
     ])

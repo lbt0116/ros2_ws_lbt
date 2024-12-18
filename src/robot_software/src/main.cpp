@@ -2,16 +2,16 @@
 // Created by lbt on 24-12-8.
 //
 
+#include <pinocchio/algorithm/crba.hpp>
+#include <pinocchio/algorithm/frames.hpp>
+#include <pinocchio/algorithm/jacobian.hpp>
+#include <pinocchio/algorithm/joint-configuration.hpp>
+#include <pinocchio/algorithm/kinematics.hpp>
+#include <pinocchio/algorithm/rnea.hpp>
 #include <pinocchio/fwd.hpp>
+#include <pinocchio/parsers/urdf.hpp>
+#include <rclcpp/rclcpp.hpp>
 
-#include "pinocchio/algorithm/crba.hpp"
-#include "pinocchio/algorithm/frames.hpp"
-#include "pinocchio/algorithm/jacobian.hpp"
-#include "pinocchio/algorithm/joint-configuration.hpp"
-#include "pinocchio/algorithm/kinematics.hpp"
-#include "pinocchio/algorithm/rnea.hpp"
-#include "pinocchio/parsers/urdf.hpp"
-#include "rclcpp/rclcpp.hpp"
 #include "robot_software/robot_FSM/RobotFSMNode.h"
 #include "robot_software/robot_controller/RobotControllerNode.h"
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     const auto RobotPlanningNode = std::make_shared<Galileo::RobotPlanningNode>();
     const auto RobotControllerNode = std::make_shared<Galileo::RobotControllerNode>();
     const auto UserInterfaceNode = std::make_shared<Galileo::UserInterfaceNode>();
+
     // 添加节点到执行器
     executor.add_node(RobotInterfaceNode);
     executor.add_node(PinocchioInterfaceNode);
@@ -44,6 +45,7 @@ int main(int argc, char* argv[])
     executor.add_node(RobotPlanningNode);
     executor.add_node(RobotControllerNode);
     executor.add_node(UserInterfaceNode);
+
     // 启动执行器
     executor.spin();
 
