@@ -196,7 +196,7 @@ PinocchioInterfaceNode::~PinocchioInterfaceNode() = default;
 
 void PinocchioInterfaceNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
+    // RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
     impl_->update_pinocchio(this);
 }
 

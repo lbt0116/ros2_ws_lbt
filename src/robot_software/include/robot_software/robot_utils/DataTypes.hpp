@@ -13,7 +13,8 @@ struct robot_constants
     double length = 0.6;
     double width = 0.4;
     double legLength = 0.36;
-
+    double xOffset = 0.06;
+    double yOffset = 0.08;
     mat33 inertiaMatrix;
     mat66 spatialInertiaMatrix;
 };
@@ -66,7 +67,6 @@ struct BaseState
 struct ContactState
 {
     vec4i isContact;
-
     mat34 contactForce;
 };
 }  // namespace robot_state
@@ -93,58 +93,51 @@ struct SensorData
 
 namespace robot_FSM
 {
-struct GaitSchedule
+
+struct legPhase
 {
-    Eigen::Matrix<int, Eigen::Dynamic, 4> gaitSequence;
-    double swingHeight;
-    double stand_T;
-    double swing_T;
-    int gaitTag;
-    double standHeight;
+    Eigen::Matrix<int, 4, 1> legPhase;
+    int isStep;
+    Eigen::Matrix<double, 4, 1> timeSw;
 };
 
-struct Command
-{
-    int gaitCmd;
-    Eigen::Matrix<int, 4, 1> legPhase;
-};
 }  // namespace robot_FSM
 
-// 接口相关数据结构
-namespace robot_interface
+namespace robot_target_trajectory
 {
-struct PinocchioData
+
+struct TargetBaseTrajectory
 {
-    mat66 mass_matrix;
-    vec6 gravity_terms;
-    mat34 jacobian;
+    vec3 targetPosition;
+    vec3 targetEulerAngles;
+    vec3 targetLinearVelocity;
+    vec3 targetAngularVelocity;
 };
 
-struct MujocoData
+struct TargetLegTrajectory
 {
-    vec12 qpos;
-    vec12 qvel;
-    vec12 ctrl;
-    double time{0.0};
-};
-}  // namespace robot_interface
-
-// 控制器相关数据结构
-namespace robot_controller
-{
-struct ControlCommand
-{
-    Eigen::VectorXd desired_position;
-    Eigen::VectorXd desired_velocity;
-    Eigen::VectorXd kp;
-    Eigen::VectorXd kd;
+    mat34 p;
+    mat34 v;
+    mat34 a;
+    mat34 toeLocation;
 };
 
-struct ControlOutput
+struct TargetJointTrajectory
 {
-    Eigen::VectorXd torque;
-    double timestamp{0.0};
+    mat34 targetJointPosition;
+    mat34 targetJointVelocity;
+    mat34 targetJointTorque;
 };
-}  // namespace robot_controller
+}  // namespace robot_target_trajectory
+
+namespace robot_user_cmd
+{
+struct UserCmd
+{
+    vec3 veloCmd = {0, 0, 0};
+    vec3 angveloCmd = {0, 0, 0};
+    int gaitCmd = 0;
+};
+}  // namespace robot_user_cmd
 
 }  // namespace Galileo

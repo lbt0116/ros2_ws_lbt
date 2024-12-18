@@ -3,7 +3,8 @@
 namespace Galileo
 {
 UserInterfaceNode::UserInterfaceNode()
-    : Node("user_interface_node", rclcpp::NodeOptions().use_intra_process_comms(true))
+    : Node("user_interface_node", rclcpp::NodeOptions().use_intra_process_comms(true)),
+      cmdHandler_(std::make_unique<CmdHandler>())
 {
     keyboardSub_ = this->create_subscription<std_msgs::msg::String>(
         "keyboard_input",
@@ -15,15 +16,9 @@ UserInterfaceNode::UserInterfaceNode()
 
 void Galileo::UserInterfaceNode::keyboard_callback(const std_msgs::msg::String::ConstSharedPtr& msg)
 {
-    switch (msg->data[0])
-    {
-        case 'w': RCLCPP_INFO(this->get_logger(), "Received key: %s", msg->data.c_str()); break;
-        case 's': RCLCPP_INFO(this->get_logger(), "Received key: %s", msg->data.c_str()); break;
-        case 'a': RCLCPP_INFO(this->get_logger(), "Received key: %s", msg->data.c_str()); break;
-        case 'd': RCLCPP_INFO(this->get_logger(), "Received key: %s", msg->data.c_str()); break;
-        case 'q': RCLCPP_INFO(this->get_logger(), "Received key: %s", msg->data.c_str()); break;
-        case 'e': RCLCPP_INFO(this->get_logger(), "Received key: %s", msg->data.c_str()); break;
-    }
+    // 处理键盘输入
+    cmdHandler_->keyboard_callback(msg);
+    // 发布键盘输入
     keyboard_publish(msg);
 }
 

@@ -3,7 +3,7 @@
 #include "Eigen/Dense"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "robot_software/robot_utils/DataTypes.hpp"
-
+#include "robot_software/robot_utils/GaitSchedule.hpp"
 namespace Galileo
 {
 
@@ -27,8 +27,7 @@ private:
 
     Eigen::Matrix<int, 4, 1> lastLegContactState;
     Eigen::Matrix<int, 4, 1> legContactState;
-    robot_FSM::GaitSchedule trot, stand, bound, flytrot, pace, standtrot;
-    robot_FSM::GaitSchedule* currentGait;
+    GaitSchedule currentGait;
     Eigen::Matrix<int, 4, 1> LegPhase;
 
     void updatePhase();

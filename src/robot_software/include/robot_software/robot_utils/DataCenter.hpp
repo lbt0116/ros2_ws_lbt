@@ -3,9 +3,13 @@
 #include <atomic>
 #include <concepts>
 #include <memory>
+
 #include "robot_software/robot_utils/DataTypes.hpp"
 
 // 定义可存储数据类型的概念
+
+// 静态模板成员 data_storage<T> 是默认初始化的，即一开始是 nullptr。
+// 如果在写入数据之前调用了 read 函数，返回的智能指针将是一个空指针，这可能导致程序崩溃或逻辑错误。
 namespace Galileo
 {
 template <typename T>
@@ -30,10 +34,22 @@ public:
 
     // 通用读取接口
     template <StorableData T>
-    std::shared_ptr<T> read() const
+    std::shared_ptr<T> read()  // 移除 const
     {
-        return getData<T>().load();
+        auto data = getData<T>().load();
+        if (!data)
+        {
+            data = std::make_shared<T>();
+            getData<T>().store(data);
+        }
+        return data;
     }
+
+    // template <StorableData T>
+    // std::shared_ptr<T> read() const
+    // {
+    //     return getData<T>().load();
+    // }
 
 private:
     DataCenter() = default;

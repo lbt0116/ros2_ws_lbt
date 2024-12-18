@@ -25,7 +25,7 @@ RobotEstimatorNode::RobotEstimatorNode()
 
 void RobotEstimatorNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
+    // RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
     // eskf_->run(msg->data);
 }
 }  // namespace Galileo

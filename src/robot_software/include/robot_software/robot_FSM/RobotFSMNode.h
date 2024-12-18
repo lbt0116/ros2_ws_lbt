@@ -22,7 +22,8 @@ private:
 
     // 触发信号回调函数
     void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg);
-
+    // 状态机
+    std::unique_ptr<FiniteStateMachine> fsm_;
     // 数据中心
     DataCenter& dataCenter;
 };

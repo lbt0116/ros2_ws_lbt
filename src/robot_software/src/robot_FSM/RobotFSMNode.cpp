@@ -5,7 +5,8 @@ namespace Galileo
 
 RobotFSMNode::RobotFSMNode()
     : Node("robot_fsm_node", rclcpp::NodeOptions().use_intra_process_comms(true)),
-      dataCenter(DataCenter::getInstance())
+      dataCenter(DataCenter::getInstance()),
+      fsm_(std::make_unique<FiniteStateMachine>())
 {
     triggerSub_ = this->create_subscription<std_msgs::msg::Bool>(
         "trigger",
@@ -17,7 +18,10 @@ RobotFSMNode::RobotFSMNode()
 
 void RobotFSMNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
-    RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
+    fsm_->update_input();
+    fsm_->run();
+    fsm_->update_output();
+    // RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
 }
 
 }  // namespace Galileo

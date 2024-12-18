@@ -20,6 +20,6 @@ private:
 
     // 触发信号回调函数
     void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg);
-    // DataCenter& dataCenter;
+    DataCenter& dataCenter;
 };
 }  // namespace Galileo

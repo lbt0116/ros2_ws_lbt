@@ -35,8 +35,10 @@ MujocoInterfaceNode::MujocoInterfaceNode()
         SyncPolicy(*sync_policy_), imu_subscriber_, joint_subscriber_);
 
     // 注册同步回调函数
-    synchronizer_->registerCallback(std::bind(
-        &MujocoInterfaceNode::sub_sensor_callback, this, std::placeholders::_1, std::placeholders::_2));
+    synchronizer_->registerCallback(std::bind(&MujocoInterfaceNode::sub_sensor_callback,
+                                              this,
+                                              std::placeholders::_1,
+                                              std::placeholders::_2));
 }
 
 void MujocoInterfaceNode::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
@@ -51,12 +53,12 @@ void MujocoInterfaceNode::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg:
 
     dataCenter.write(contactState);
 
-    RCLCPP_INFO(this->get_logger(),
-                "pub contact %.1d %.1d %.1d %.1d",
-                contactState.isContact(0),
-                contactState.isContact(1),
-                contactState.isContact(2),
-                contactState.isContact(3));
+    // RCLCPP_INFO(this->get_logger(),
+    //             "pub contact %.1d %.1d %.1d %.1d",
+    //             contactState.isContact(0),
+    //             contactState.isContact(1),
+    //             contactState.isContact(2),
+    //             contactState.isContact(3));
 }
 
 void MujocoInterfaceNode::sub_sensor_callback(

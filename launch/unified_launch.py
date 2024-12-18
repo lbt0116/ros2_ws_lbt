@@ -34,7 +34,7 @@ def generate_launch_description():
             parameters=[]
         ),
         ExecuteProcess(
-            cmd=['warp-terminal', '--', 'ros2', 'run', 'keyboard_control', 'keyboard_publisher'],
+            cmd=['gnome-terminal', '--', 'ros2', 'run', 'keyboard_control', 'keyboard_publisher'],
             output='screen'
         )
     ])
