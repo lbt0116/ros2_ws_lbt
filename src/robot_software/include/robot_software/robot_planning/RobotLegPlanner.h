@@ -13,11 +13,12 @@ public:
     // 腿轨迹
     robot_target_trajectory::TargetLegTrajectory legTrajectory;
 
+    // 腿轨迹规划
+    void update_leg_trajectory();
+
 private:
     DataCenter &dataCenter;  // 数据中心
 
-    // 腿轨迹规划
-    void update_leg_trajectory();
     // 计算足端位置
     void raibert_foot_location(const vec3 &v, const vec3 &vd, double T);
     // 计算摆动目标
@@ -46,11 +47,11 @@ private:
         int gaitCmd;
         int isStep;
         vec3 targetBaseVelo;
-        mat34 initToeLocation;
-        mat34 initToeVelo;
-        vec3 initCoMPos;
-        vec3 initCoMVelo;
-    };
+        mat34 initToeLocation = mat34::Zero();
+        mat34 initToeVelo = mat34::Zero();
+        vec3 initCoMPos = vec3::Zero();
+        vec3 initCoMVelo = vec3::Zero();
+    } state;
 
     // 新增辅助函数
     LegPlanningState get_current_state();

@@ -94,7 +94,7 @@ struct SensorData
 namespace robot_FSM
 {
 
-struct legPhase
+struct legState
 {
     Eigen::Matrix<int, 4, 1> legPhase;
     int isStep;

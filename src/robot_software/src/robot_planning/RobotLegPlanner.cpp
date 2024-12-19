@@ -6,6 +6,7 @@ namespace Galileo
 RobotLegPlanner::RobotLegPlanner()
     : dataCenter(DataCenter::getInstance())
 {
+    state.initToeLocation << 0, 0, 0, 0, 0, 0, 0, 0, -0.5, -0.5, -0.5, -0.5;
 }
 
 RobotLegPlanner::~RobotLegPlanner()
@@ -18,8 +19,9 @@ void RobotLegPlanner::update_leg_trajectory()
     LegPlanningState state = get_current_state();
 
     // 2. 计算目标落足点
-    raibert_foot_location(
-        state.initCoMVelo, state.initCoMVelo, GaitSchedules::getGaitByTag(state.gaitCmd).swing_T);
+    raibert_foot_location(state.initCoMVelo,
+                          state.targetBaseVelo,
+                          GaitSchedules::getGaitByTag(state.gaitCmd).swing_T);
 
     // 3. 计算目标速度
     mat34 targetToeVelo = calculate_target_velocity(state.targetBaseVelo);
@@ -34,11 +36,11 @@ void RobotLegPlanner::update_leg_trajectory()
 RobotLegPlanner::LegPlanningState RobotLegPlanner::get_current_state()
 {
     // 1. 获取当前状态
-    LegPlanningState state;
+    // LegPlanningState state;
 
     // 2. 获取当前步态
-    state.phase = dataCenter.read<robot_FSM::legPhase>()->legPhase;
-    state.isStep = dataCenter.read<robot_FSM::legPhase>()->isStep;
+    state.phase = dataCenter.read<robot_FSM::legState>()->legPhase;
+    state.isStep = dataCenter.read<robot_FSM::legState>()->isStep;
 
     // 3. 获取当前用户指令
     state.gaitCmd = dataCenter.read<robot_user_cmd::UserCmd>()->gaitCmd;
@@ -79,7 +81,7 @@ void RobotLegPlanner::generate_leg_trajectories(const LegPlanningState &state,
                              legTrajectory.toeLocation,
                              targetToeVelo,
                              gaitSchedule.swingHeight,
-                             dataCenter.read<robot_FSM::legPhase>()->timeSw(i),
+                             dataCenter.read<robot_FSM::legState>()->timeSw(i),
                              gaitSchedule.swing_T,
                              i);
         }
@@ -88,7 +90,7 @@ void RobotLegPlanner::generate_leg_trajectories(const LegPlanningState &state,
             get_stance_target(state.initToeLocation,
                               state.initToeVelo,
                               state.targetBaseVelo,
-                              dataCenter.read<robot_FSM::legPhase>()->timeSw(i),
+                              dataCenter.read<robot_FSM::legState>()->timeSw(i),
                               gaitSchedule.stand_T,
                               i);
         }
@@ -201,17 +203,17 @@ void RobotLegPlanner::get_swing_target(const mat34 &initToeLocation,
                             0);                     // 终止加速度
 
     // 获取当前时刻的位置、速度和加速度
-    legTrajectory.p(i, 0) = trajX.getPosition(t);
-    legTrajectory.v(i, 0) = trajX.getVelocity(t);
-    legTrajectory.a(i, 0) = trajX.getAcceleration(t);
+    legTrajectory.p(0, i) = trajX.getPosition(t);
+    legTrajectory.v(0, i) = trajX.getVelocity(t);
+    legTrajectory.a(0, i) = trajX.getAcceleration(t);
 
-    legTrajectory.p(i, 1) = trajY.getPosition(t);
-    legTrajectory.v(i, 1) = trajY.getVelocity(t);
-    legTrajectory.a(i, 1) = trajY.getAcceleration(t);
+    legTrajectory.p(1, i) = trajY.getPosition(t);
+    legTrajectory.v(1, i) = trajY.getVelocity(t);
+    legTrajectory.a(1, i) = trajY.getAcceleration(t);
 
-    legTrajectory.p(i, 2) = trajZ.getPosition(t);
-    legTrajectory.v(i, 2) = trajZ.getVelocity(t);
-    legTrajectory.a(i, 2) = trajZ.getAcceleration(t);
+    legTrajectory.p(2, i) = trajZ.getPosition(t);
+    legTrajectory.v(2, i) = trajZ.getVelocity(t);
+    legTrajectory.a(2, i) = trajZ.getAcceleration(t);
 }
 
 void RobotLegPlanner::get_stance_target(const mat34 &initToeLocation,

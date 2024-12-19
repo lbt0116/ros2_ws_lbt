@@ -65,6 +65,20 @@ void RobotControllerNode::publish_commands()
         msg.kp[i] = 100.0;  // PD控制增益
         msg.kd[i] = 10.0;
     }
+    msg.pos[0] = 0.0;
+    msg.pos[3] = 0.0;
+    msg.pos[6] = 0.0;
+    msg.pos[9] = 0.0;
+
+    msg.pos[1] = -3.14 / 4;
+    msg.pos[4] = -3.14 / 4;
+    msg.pos[7] = -3.14 / 4;
+    msg.pos[10] = -3.14 / 4;
+
+    msg.pos[2] = 3.14 / 2;
+    msg.pos[5] = 3.14 / 2;
+    msg.pos[8] = 3.14 / 2;
+    msg.pos[11] = 3.14 / 2;
 
     publisher_->publish(msg);
     // RCLCPP_INFO(this->get_logger(), "Published actuator commands %.3f", msg.torque[0]);

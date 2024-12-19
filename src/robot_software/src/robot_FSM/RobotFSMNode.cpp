@@ -23,10 +23,10 @@ void RobotFSMNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& m
     fsm_->update_output();
     RCLCPP_INFO(this->get_logger(),
                 "legPhase received: %d, %d, %d, %d",
-                dataCenter.read<robot_FSM::legPhase>()->legPhase(0),
-                dataCenter.read<robot_FSM::legPhase>()->legPhase(1),
-                dataCenter.read<robot_FSM::legPhase>()->legPhase(2),
-                dataCenter.read<robot_FSM::legPhase>()->legPhase(3));
+                dataCenter.read<robot_FSM::legState>()->legPhase(0),
+                dataCenter.read<robot_FSM::legState>()->legPhase(1),
+                dataCenter.read<robot_FSM::legState>()->legPhase(2),
+                dataCenter.read<robot_FSM::legState>()->legPhase(3));
 }
 
 }  // namespace Galileo

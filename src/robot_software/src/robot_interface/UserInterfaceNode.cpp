@@ -13,7 +13,7 @@ UserInterfaceNode::UserInterfaceNode()
         std::bind(&UserInterfaceNode::keyboard_callback, this, std::placeholders::_1));
 
     userDataPub_ = this->create_publisher<custom_msgs::msg::ToUiMsg>("user_data_output", 10);
-    userDataTimer_ = this->create_wall_timer(std::chrono::milliseconds(20),
+    userDataTimer_ = this->create_wall_timer(std::chrono::milliseconds(1),
                                              std::bind(&UserInterfaceNode::userDataCallback, this));
 }
 

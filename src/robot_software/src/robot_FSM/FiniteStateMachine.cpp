@@ -23,13 +23,13 @@ void Galileo::FiniteStateMachine::update_input()
 }
 void Galileo::FiniteStateMachine::update_output()
 {
-    robot_FSM::legPhase legPhase;
+    robot_FSM::legState legState;
 
-    legPhase.legPhase = LegPhase;
-    legPhase.timeSw = time_sw;
-    legPhase.isStep = StepFlag;
+    legState.legPhase = LegPhase;
+    legState.timeSw = time_sw;
+    legState.isStep = StepFlag;
 
-    dataCenter.write<robot_FSM::legPhase>(legPhase);
+    dataCenter.write<robot_FSM::legState>(legState);
 }
 Eigen::Matrix<int, 4, 1> Galileo::FiniteStateMachine::run()
 {
@@ -61,6 +61,7 @@ Eigen::Matrix<int, 4, 1> Galileo::FiniteStateMachine::run()
     if (tag == 0)
     {
         LegPhase.setOnes();
+        // time = 0;
         updatePhase();
     }
     else if (tag == 1 || tag == 2 || tag == 4)

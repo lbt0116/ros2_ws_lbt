@@ -18,9 +18,11 @@ public:
         custom_msgs::msg::ToUiMsg msg;
 
         msg.leg_pose = eigenToStdArray(dataCenter_.read<robot_state::LegState>()->legPosHipInWorld);
+        msg.leg_pose_des =
+            eigenToStdArray(dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->p);
         msg.gait_cmd = dataCenter_.read<robot_user_cmd::UserCmd>()->gaitCmd;
         msg.base_vel_des = eigenToStdArray(dataCenter_.read<robot_user_cmd::UserCmd>()->veloCmd);
-        msg.leg_phase = eigenToStdArray(dataCenter_.read<robot_FSM::legPhase>()->legPhase);
+        msg.leg_phase = eigenToStdArray(dataCenter_.read<robot_FSM::legState>()->legPhase);
         return msg;
     }
 

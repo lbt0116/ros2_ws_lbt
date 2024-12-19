@@ -3,8 +3,8 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/bool.hpp>
 
+#include "robot_software/robot_planning/RobotLegPlanner.h"
 #include "robot_software/robot_utils/DataCenter.hpp"
-
 namespace Galileo
 {
 
@@ -20,6 +20,9 @@ private:
 
     // 触发信号回调函数
     void trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg);
+
     DataCenter& dataCenter;
+
+    std::unique_ptr<RobotLegPlanner> legPlanner_;
 };
 }  // namespace Galileo

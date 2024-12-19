@@ -32,7 +32,7 @@ private:
 
     void updatePhase();
 
-    bool StepFlag = 0;
+    bool StepFlag = 0;  // TODO: 需要根据实际情况修改 机器人初始位置记录
     int gaitCmd;
 
     int lasttag;
