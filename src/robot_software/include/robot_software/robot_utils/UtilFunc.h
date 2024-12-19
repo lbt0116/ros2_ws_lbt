@@ -6,7 +6,14 @@
 #define UTILFUNC_H
 
 #include <Eigen/Dense>
+#include <algorithm>
+#include <concepts>
+#include <execution>
+#include <memory>
+#include <ranges>
 #include <std_msgs/msg/float64_multi_array.hpp>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -39,34 +46,153 @@ void float64MultiArrayToEigen(const std_msgs::msg::Float64MultiArray& msg,
         msg.data.data(), msg.layout.dim[0].size, msg.layout.dim[1].size);
 }
 
-// 通用模板函数：将Eigen矩阵转换为std::vector
-template <typename Derived>
-std::vector<typename Derived::Scalar> eigenToStdVector(const Eigen::MatrixBase<Derived>& matrix)
+/**
+ * @brief 将Eigen矩阵转换为std::vector
+ * @tparam MatrixType 必须是Eigen::MatrixBase的派生类
+ * @param matrix 要转换的Eigen矩阵
+ * @return 转换后的std::vector
+ * @throws std::invalid_argument 如果输入矩阵为空
+ */
+template <typename MatrixType>
+requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType>
+auto eigenToStdVector(const MatrixType& matrix) -> std::vector<typename MatrixType::Scalar>
 {
-    // 确保输入是Eigen矩阵或向量
-    static_assert(std::is_base_of<Eigen::MatrixBase<Derived>, Derived>::value,
-                  "Input must be an Eigen matrix or vector");
+    using Scalar = typename MatrixType::Scalar;
 
-    // 使用Eigen提供的.data()方法，将矩阵数据以列优先顺序复制到std::vector
-    return std::vector<typename Derived::Scalar>(matrix.data(), matrix.data() + matrix.size());
-}
-
-// 通用模板函数：将std::vector转换为Eigen矩阵
-template <typename Scalar>
-Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>
-stdVectorToEigen(const std::vector<Scalar>& vec, size_t rows, size_t cols)
-{
-    // 检查输入数据大小是否匹配指定的矩阵维度
-    if (vec.size() != rows * cols)
+    // 检查矩阵是否为空
+    if (matrix.size() == 0)
     {
-        throw std::runtime_error("Matrix size mismatch: expected " + std::to_string(rows * cols)
-                                 + ", got " + std::to_string(vec.size()));
+        throw std::invalid_argument("The input Eigen matrix is empty (size 0).");
     }
 
-    // 构造Eigen矩阵并将数据以列优先顺序填充
-    Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> matrix(rows, cols);
-    std::copy(vec.data(), vec.data() + vec.size(), matrix.data());
+    // 分配 std::vector 并将矩阵转换为一维存储
+    std::vector<Scalar> result(matrix.size());
+
+    try
+    {
+        // 使用 C++20 的 ranges::transform 和 reshaped
+        std::ranges::transform(
+            matrix.reshaped(), result.begin(), [](const Scalar& value) { return value; });
+    }
+    catch (const std::exception& e)
+    {
+        throw std::runtime_error(std::string("Error during Eigen to std::vector conversion: ")
+                                 + e.what());
+    }
+
+    return result;
+}
+
+/**
+ * @brief 将std::vector转换为Eigen矩阵
+ * @tparam MatrixType 必须是Eigen::MatrixBase的派生类
+ * @param vec 要转换的std::vector
+ * @param rows 目标矩阵的行数
+ * @param cols 目标矩阵的列数
+ * @return 转换后的Eigen矩阵
+ * @throws std::invalid_argument 如果输入的std::vector为空或大小不匹配
+ */
+template <typename MatrixType>
+requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType> MatrixType
+stdVectorToEigen(const std::vector<typename MatrixType::Scalar>& vec, int rows, int cols)
+{
+    using Scalar = typename MatrixType::Scalar;
+
+    // 检查矩阵的行列大小是否合理
+    if (rows <= 0 || cols <= 0)
+    {
+        throw std::invalid_argument(
+            "Invalid matrix dimensions: rows and cols must be greater than 0.");
+    }
+
+    // 检查 std::vector 的大小是否与目标矩阵匹配
+    if (vec.size() != static_cast<size_t>(rows * cols))
+    {
+        throw std::invalid_argument(
+            "The size of the std::vector does not match the specified matrix dimensions.");
+    }
+
+    // 创建矩阵并填充数据
+    MatrixType matrix(rows, cols);
+    try
+    {
+        for (int i = 0; i < rows; ++i)
+        {
+            for (int j = 0; j < cols; ++j)
+            {
+                // 按照 Column-Major 存储，将 vec 映射到 Eigen 矩阵
+                matrix(i, j) = vec[i + j * rows];
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        throw std::runtime_error(std::string("Error during std::vector to Eigen conversion: ")
+                                 + e.what());
+    }
+
     return matrix;
+}
+
+/**
+ * @brief 将Eigen矩阵高效转换为std::array
+ * @tparam MatrixType 必须是Eigen::MatrixBase的派生类，且大小必须是编译时已知的固定大小
+ * @param matrix 要转换的Eigen矩阵
+ * @return 转换后的std::array
+ * @throws std::invalid_argument 如果矩阵的大小在编译时不可知
+ */
+template <typename MatrixType>
+requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType>
+    std::array<typename MatrixType::Scalar,
+               MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime>
+    eigenToStdArray(const MatrixType& matrix)
+{
+    using Scalar = typename MatrixType::Scalar;
+
+    // 检查矩阵是否是固定大小
+    static_assert(MatrixType::RowsAtCompileTime != Eigen::Dynamic
+                      && MatrixType::ColsAtCompileTime != Eigen::Dynamic,
+                  "Matrix must have fixed size at compile time");
+
+    // 创建 std::array 并直接拷贝数据
+    constexpr std::size_t size = MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime;
+    std::array<Scalar, size> result;
+    Eigen::Map<Eigen::Matrix<Scalar,
+                             MatrixType::RowsAtCompileTime,
+                             MatrixType::ColsAtCompileTime,
+                             Eigen::ColMajor>>(result.data()) = matrix;
+
+    return result;
+}
+
+/**
+ * @brief 将std::array高效转换为Eigen矩阵
+ * @tparam MatrixType 必须是Eigen::MatrixBase的派生类，且大小必须是编译时已知的固定大小
+ * @param arr 要转换的std::array
+ * @return 转换后的Eigen矩阵
+ */
+template <typename MatrixType>
+requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType> MatrixType stdArrayToEigen(
+    const std::array<typename MatrixType::Scalar,
+                     MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime>& arr)
+{
+    using Scalar = typename MatrixType::Scalar;
+
+    // 检查矩阵是否是固定大小
+    static_assert(MatrixType::RowsAtCompileTime != Eigen::Dynamic
+                      && MatrixType::ColsAtCompileTime != Eigen::Dynamic,
+                  "Matrix must have fixed size at compile time");
+
+    // 使用 Eigen::Map 将 std::array 映射为 Eigen 矩阵
+    constexpr std::size_t size = MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime;
+    Eigen::Map<const Eigen::Matrix<Scalar,
+                                   MatrixType::RowsAtCompileTime,
+                                   MatrixType::ColsAtCompileTime,
+                                   Eigen::ColMajor>>
+        mapped_matrix(arr.data());
+
+    // 返回映射矩阵的副本
+    return mapped_matrix;
 }
 
 #include "eigen3/Eigen/Dense"

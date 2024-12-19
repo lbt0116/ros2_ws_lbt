@@ -17,9 +17,8 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/MujocoMsg.msg"
-        "msg/SensorMsg.msg"
         "msg/ActuatorCmds.msg"
-        "msg/RobotStateMsg.msg"
+        "msg/ToUiMsg.msg"
         DEPENDENCIES std_msgs sensor_msgs geometry_msgs
 )
 if (BUILD_TESTING)

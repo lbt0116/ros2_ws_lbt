@@ -6,14 +6,14 @@
 #include "std_msgs/msg/string.hpp"
 namespace Galileo
 {
-class CmdHandler
+class KeyboardCmdHandler
 {
 public:
-    CmdHandler()
+    KeyboardCmdHandler()
         : data_center_{DataCenter::getInstance()}
     {
     }
-    ~CmdHandler(){};
+    ~KeyboardCmdHandler(){};
     void keyboard_callback(const std_msgs::msg::String::ConstSharedPtr& msg)
     {
         switch (msg->data[0])

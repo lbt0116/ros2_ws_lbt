@@ -47,7 +47,8 @@ void MujocoInterfaceNode::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg:
     contactState.isContact << msg->contact_state[0], msg->contact_state[1], msg->contact_state[2],
         msg->contact_state[3];
 
-    contactState.contactForce = stdVectorToEigen(msg->ground_reaction_force, 3, 4);
+    contactState.contactForce =
+        stdVectorToEigen<Eigen::Matrix<double, 3, 4>>(msg->ground_reaction_force, 3, 4);
 
     // std::cout << contactState.contactForce << std::endl;
 

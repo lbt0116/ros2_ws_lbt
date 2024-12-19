@@ -19,6 +19,7 @@
 #include "robot_software/robot_interface/PinocchioInterfaceNode.h"
 #include "robot_software/robot_interface/UserInterfaceNode.h"
 #include "robot_software/robot_planning/RobotPlanningNode.h"
+
 int main(int argc, char* argv[])
 {
     // 设置环境变量启用颜色输出
@@ -26,7 +27,11 @@ int main(int argc, char* argv[])
     rclcpp::init(argc, argv);
 
     // 静态单线程执行器 省去动态管理节点的开销
-    rclcpp::executors::StaticSingleThreadedExecutor executor;
+    rclcpp::executors::StaticSingleThreadedExecutor main_executor;
+    // 多线程执行器 用于用户交互
+    rclcpp::executors::MultiThreadedExecutor user_executor;
+    // 多线程执行器 用于用户交互 绑定4个线程
+    // rclcpp::executors::MultiThreadedExecutor user_executor(rclcpp::ExecutorOptions(), 4);
 
     // 创建节点
     const auto RobotInterfaceNode = std::make_shared<Galileo::MujocoInterfaceNode>();
@@ -38,16 +43,24 @@ int main(int argc, char* argv[])
     const auto UserInterfaceNode = std::make_shared<Galileo::UserInterfaceNode>();
 
     // 添加节点到执行器
-    executor.add_node(RobotInterfaceNode);
-    executor.add_node(PinocchioInterfaceNode);
-    executor.add_node(RobotEstimatorNode);
-    executor.add_node(RobotFSMNode);
-    executor.add_node(RobotPlanningNode);
-    executor.add_node(RobotControllerNode);
-    executor.add_node(UserInterfaceNode);
+    main_executor.add_node(RobotInterfaceNode);
+    main_executor.add_node(PinocchioInterfaceNode);
+    main_executor.add_node(RobotEstimatorNode);
+    main_executor.add_node(RobotFSMNode);
+    main_executor.add_node(RobotPlanningNode);
+    main_executor.add_node(RobotControllerNode);
 
-    // 启动执行器
-    executor.spin();
+    // 添加用户交互节点到多线程执行器
+    user_executor.add_node(UserInterfaceNode);
+
+    // 创建一个线程来运行用户交互执行器
+    std::thread user_thread([&]() { user_executor.spin(); });
+
+    // 在主线程中运行主执行器
+    main_executor.spin();
+
+    // 等待用户交互线程结束
+    user_thread.join();
 
     // 关闭节点
     rclcpp::shutdown();

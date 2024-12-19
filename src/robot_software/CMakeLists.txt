@@ -29,6 +29,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(message_filters REQUIRED)
+find_package(TBB REQUIRED)
 
 file(GLOB_RECURSE source
         ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
@@ -65,7 +66,8 @@ ament_target_dependencies(main_app
 )
 
 target_link_libraries(main_app
-        pinocchio::pinocchio)
+        pinocchio::pinocchio
+        TBB::tbb)
 
 #add_library(lib_cpp20 SHARED src/cpp20_code.cpp) #!!!
 #target_compile_features(lib_cpp20 PRIVATE cxx_std_20) #!!!

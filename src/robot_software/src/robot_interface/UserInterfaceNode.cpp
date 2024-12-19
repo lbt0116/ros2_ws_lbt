@@ -4,28 +4,29 @@ namespace Galileo
 {
 UserInterfaceNode::UserInterfaceNode()
     : Node("user_interface_node", rclcpp::NodeOptions().use_intra_process_comms(true)),
-      cmdHandler_(std::make_unique<CmdHandler>())
+      keyboardCmdHandler_(std::make_unique<KeyboardCmdHandler>()),
+      userDataHandler_(std::make_unique<UserDataHandler>())
 {
     keyboardSub_ = this->create_subscription<std_msgs::msg::String>(
         "keyboard_input",
         10,
         std::bind(&UserInterfaceNode::keyboard_callback, this, std::placeholders::_1));
 
-    keyboardPub_ = this->create_publisher<std_msgs::msg::String>("keyboard_output", 10);
+    userDataPub_ = this->create_publisher<custom_msgs::msg::ToUiMsg>("user_data_output", 10);
+    userDataTimer_ = this->create_wall_timer(std::chrono::milliseconds(20),
+                                             std::bind(&UserInterfaceNode::userDataCallback, this));
 }
 
 void Galileo::UserInterfaceNode::keyboard_callback(const std_msgs::msg::String::ConstSharedPtr& msg)
 {
     // 处理键盘输入
-    cmdHandler_->keyboard_callback(msg);
-    // 发布键盘输入
-    keyboard_publish(msg);
+    keyboardCmdHandler_->keyboard_callback(msg);
 }
 
-void Galileo::UserInterfaceNode::keyboard_publish(const std_msgs::msg::String::ConstSharedPtr& msg)
+void Galileo::UserInterfaceNode::userDataCallback()
 {
-    auto msg_out = std_msgs::msg::String();
-    msg_out.data = msg->data;
-    keyboardPub_->publish(msg_out);
+    // 更新用户交互数据
+    custom_msgs::msg::ToUiMsg msg = userDataHandler_->updateUserData();
+    userDataPub_->publish(msg);
 }
 }  // namespace Galileo
