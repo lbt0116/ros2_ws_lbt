@@ -9,7 +9,6 @@
 
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "custom_msgs/msg/mujoco_msg.hpp"
-#include "custom_msgs/msg/robot_state_msg.hpp"
 #include "message_filters/subscriber.h"
 #include "message_filters/sync_policies/approximate_time.h"
 #include "message_filters/synchronizer.h"

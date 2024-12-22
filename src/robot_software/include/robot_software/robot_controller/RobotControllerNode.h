@@ -4,6 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "robot_software/robot_controller/BallanceController.h"
 
 namespace Galileo
 {
@@ -34,5 +35,6 @@ private:
 
     // 数据中心
     DataCenter& dataCenter;
+
 };
 }  // namespace Galileo

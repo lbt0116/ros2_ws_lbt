@@ -8,7 +8,6 @@
 #include <memory>  // 用于智能指针
 
 #include "custom_msgs/msg/actuator_cmds.hpp"
-#include "custom_msgs/msg/robot_state_msg.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robot_software/robot_estimator/EskfOnSe3.h"
 #include "robot_software/robot_estimator/LinearKalmanFilter.h"

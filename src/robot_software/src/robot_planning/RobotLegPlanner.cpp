@@ -157,28 +157,26 @@ void RobotLegPlanner::get_swing_target(const mat34 &initToeLocation,
                                        int i)
 {
     // X方向轨迹
-    QuinticTrajectory trajX(0,                                                      // t0
-                            initToeLocation(0, i),                                  // p0
+    QuinticTrajectory trajX(initToeLocation(0, i),                                  // p0
                             initToeVelo(0, i),                                      // v0
                             0,                                                      // a0
                             0.5 * T,                                                // tm
                             (initToeLocation(0, i) + targetToeLocation(0, i)) / 2,  // pm
-                            T,                                                      // tf
                             targetToeLocation(0, i),                                // pf
                             targetToeVelo(0, i),                                    // vf
-                            0);                                                     // af
+                            0,                                                      // af
+                            T);                                                     // T
 
     // Y方向轨迹
-    QuinticTrajectory trajY(0,
-                            initToeLocation(1, i),
+    QuinticTrajectory trajY(initToeLocation(1, i),
                             initToeVelo(1, i),
                             0,
                             0.5 * T,
                             (initToeLocation(1, i) + targetToeLocation(1, i)) / 2,
-                            T,
                             targetToeLocation(1, i),
                             targetToeVelo(1, i),
-                            0);
+                            0,
+                            T);
 
     // Z方向轨迹
     double finalZ = initToeLocation(2, i);
@@ -191,29 +189,20 @@ void RobotLegPlanner::get_swing_target(const mat34 &initToeLocation,
     //     finalZ = InitToeLocation(2, i) - sw_H;
     // }
 
-    QuinticTrajectory trajZ(0,
-                            initToeLocation(2, i),  // 起始高度
+    QuinticTrajectory trajZ(initToeLocation(2, i),  // 起始高度
                             0,                      // 初始速度
                             0,                      // 初始加速度
                             0.5 * T,                // 中间时刻
                             midZ,                   // 最高点
-                            T,                      // 终止时间
                             finalZ,                 // 终止高度
                             targetToeVelo(2, i),    // 终止速度
-                            0);                     // 终止加速度
+                            0,                      // 终止加速度
+                            T);
 
     // 获取当前时刻的位置、速度和加速度
-    legTrajectory.p(0, i) = trajX.getPosition(t);
-    legTrajectory.v(0, i) = trajX.getVelocity(t);
-    legTrajectory.a(0, i) = trajX.getAcceleration(t);
-
-    legTrajectory.p(1, i) = trajY.getPosition(t);
-    legTrajectory.v(1, i) = trajY.getVelocity(t);
-    legTrajectory.a(1, i) = trajY.getAcceleration(t);
-
-    legTrajectory.p(2, i) = trajZ.getPosition(t);
-    legTrajectory.v(2, i) = trajZ.getVelocity(t);
-    legTrajectory.a(2, i) = trajZ.getAcceleration(t);
+    trajX.evaluate(t, legTrajectory.p(0, i), legTrajectory.v(0, i), legTrajectory.a(0, i));
+    trajY.evaluate(t, legTrajectory.p(1, i), legTrajectory.v(1, i), legTrajectory.a(1, i));
+    trajZ.evaluate(t, legTrajectory.p(2, i), legTrajectory.v(2, i), legTrajectory.a(2, i));
 }
 
 void RobotLegPlanner::get_stance_target(const mat34 &initToeLocation,

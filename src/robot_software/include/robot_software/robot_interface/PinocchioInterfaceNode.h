@@ -9,7 +9,6 @@
 
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "custom_msgs/msg/mujoco_msg.hpp"
-#include "custom_msgs/msg/robot_state_msg.hpp"
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
 #include "rclcpp/rclcpp.hpp"

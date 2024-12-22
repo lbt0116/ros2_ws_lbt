@@ -1,5 +1,6 @@
 #include "robot_software/robot_controller/RobotControllerNode.h"
 
+#include "robot_software/robot_controller/BallanceController.h"
 using namespace std::chrono_literals;
 
 namespace Galileo
@@ -29,8 +30,7 @@ RobotControllerNode::RobotControllerNode()
     triggerSub_ = this->create_subscription<std_msgs::msg::Bool>(
         "trigger",
         rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data),
-        std::bind(
-            &RobotControllerNode::trigger_callback, this, std::placeholders::_1));  // 订阅触发信号
+        std::bind(&RobotControllerNode::trigger_callback, this, std::placeholders::_1));  // 订阅触发信号
 }
 
 void RobotControllerNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)

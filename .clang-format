@@ -103,7 +103,7 @@ BreakBeforeTernaryOperators: true
 IndentWidth: 4
 
 # 设置行宽以适应窗口
-ColumnLimit: 100
+ColumnLimit: 120
 
 # 初始化列表相关配置
 BreakConstructorInitializers: BeforeColon  # 在冒号前换行

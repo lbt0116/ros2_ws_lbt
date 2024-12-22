@@ -6,7 +6,8 @@ namespace Galileo
 RobotPlanningNode::RobotPlanningNode()
     : Node("robot_planning_node", rclcpp::NodeOptions().use_intra_process_comms(true)),
       dataCenter(DataCenter::getInstance()),
-      legPlanner_(std::make_unique<RobotLegPlanner>())
+      legPlanner_(std::make_unique<RobotLegPlanner>()),
+      basePlanner_(std::make_unique<RobotBasePlanner>())
 {
     triggerSub_ = this->create_subscription<std_msgs::msg::Bool>(
         "trigger",
@@ -18,6 +19,7 @@ RobotPlanningNode::RobotPlanningNode()
 void RobotPlanningNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
 {
     legPlanner_->update_leg_trajectory();
+    basePlanner_->update_base_trajectory();
     auto a = dataCenter.read<robot_user_cmd::UserCmd>();
     // RCLCPP_INFO(this->get_logger(),
     //             "legTrajectory z: %.2f %.2f %.2f %.2f",

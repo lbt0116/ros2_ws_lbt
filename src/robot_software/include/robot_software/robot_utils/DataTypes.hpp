@@ -71,26 +71,6 @@ struct ContactState
 };
 }  // namespace robot_state
 
-// 估计器相关数据结构
-namespace robot_estimator
-{
-struct LinearKalmanFilter
-{
-    vec3 position;
-    vec3 eulerAngles;
-    vec3 linearVelocity;
-    vec3 angularVelocity;
-};
-
-struct SensorData
-{
-    vec3 acceleration;
-    vec3 angular_velocity;
-    vec3 magnetic_field;
-    double timestamp{0.0};
-};
-}  // namespace robot_estimator
-
 namespace robot_FSM
 {
 
@@ -108,10 +88,10 @@ namespace robot_target_trajectory
 
 struct TargetBaseTrajectory
 {
-    vec3 targetPosition;
-    vec3 targetEulerAngles;
-    vec3 targetLinearVelocity;
-    vec3 targetAngularVelocity;
+    vec3 targetPosition = {0, 0, 0.5};
+    vec3 targetEulerAngles = {0, 0, 0};
+    vec3 targetLinearVelocity = {0, 0, 0};
+    vec3 targetAngularVelocity = {0, 0, 0};
 };
 
 struct TargetLegTrajectory
@@ -137,6 +117,7 @@ struct UserCmd
     vec3 veloCmd = {0, 0, 0};
     vec3 angveloCmd = {0, 0, 0};
     int gaitCmd = 0;
+    bool isKeyPressed = false;
 };
 }  // namespace robot_user_cmd
 
