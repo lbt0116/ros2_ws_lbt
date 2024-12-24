@@ -2,13 +2,13 @@
 
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "robot_software/robot_controller/BallanceController.h"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "std_msgs/msg/bool.hpp"
-#include "robot_software/robot_controller/BallanceController.h"
 
 namespace Galileo
 {
-class RobotControllerNode : public rclcpp::Node
+class RobotControllerNode : public rclcpp::Node, public std::enable_shared_from_this<RobotControllerNode>
 {
 public:
     RobotControllerNode();
@@ -36,5 +36,9 @@ private:
     // 数据中心
     DataCenter& dataCenter;
 
+    std::unique_ptr<BallanceController> ballanceController_;
+
+    // 动态参数回调函数
+    rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;  // 订阅者
 };
 }  // namespace Galileo

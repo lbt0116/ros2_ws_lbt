@@ -85,7 +85,14 @@ target_include_directories(main_app PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
 
+# 
 install(TARGETS main_app
         DESTINATION lib/${PROJECT_NAME})
+
+# 修改配置文件的安装路径
+install(DIRECTORY 
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../config
+        DESTINATION share/${PROJECT_NAME}/config
+)
 ament_package()
 

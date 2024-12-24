@@ -1,14 +1,24 @@
 #include "robot_software/robot_controller/RobotControllerNode.h"
 
-#include "robot_software/robot_controller/BallanceController.h"
 using namespace std::chrono_literals;
 
 namespace Galileo
 {
 RobotControllerNode::RobotControllerNode()
     : Node("robot_controller", rclcpp::NodeOptions().use_intra_process_comms(true)),
-      dataCenter(DataCenter::getInstance())
+      dataCenter(DataCenter::getInstance()),
+      ballanceController_(std::make_unique<BallanceController>())
 {
+    // 声明参数
+    ballanceController_->declare_and_get_parameters(this);
+    //
+    parameter_event_sub_ = this->create_subscription<rcl_interfaces::msg::ParameterEvent>(
+        "/parameter_events",
+        10,
+        std::bind(&BallanceController::set_parameters, ballanceController_.get(), std::placeholders::_1));
+
+    RCLCPP_INFO(this->get_logger(), "DynamicParameterNode initialized and listening for parameter events.");
+
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
     publisher_ = this->create_publisher<custom_msgs::msg::ActuatorCmds>("actuators_cmds", qos);
     timer_ = this->create_wall_timer(1ms, std::bind(&RobotControllerNode::publish_commands, this));
@@ -33,9 +43,10 @@ RobotControllerNode::RobotControllerNode()
         std::bind(&RobotControllerNode::trigger_callback, this, std::placeholders::_1));  // 订阅触发信号
 }
 
-void RobotControllerNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr& msg)
+void RobotControllerNode::trigger_callback(const std_msgs::msg::Bool::ConstSharedPtr &msg)
 {
-    // RCLCPP_INFO(this->get_logger(), "Trigger received: %d", msg->data);
+    ballanceController_->run();
+    RCLCPP_INFO(this->get_logger(), "Trigger received, running ballance controller. w: %.3f", ballanceController_->w);
 }
 
 void RobotControllerNode::publish_commands()

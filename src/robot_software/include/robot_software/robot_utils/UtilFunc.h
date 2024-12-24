@@ -11,128 +11,12 @@
 #include <execution>
 #include <memory>
 #include <ranges>
+#include <span>
 #include <std_msgs/msg/float64_multi_array.hpp>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <vector>
-
-template <typename Derived>
-void eigenToFloat64MultiArray(const Eigen::MatrixBase<Derived>& matrix,
-                              std_msgs::msg::Float64MultiArray& msg)
-{
-    // 设置维度
-    msg.layout.dim.resize(2);
-    msg.layout.dim[0].size = matrix.rows();
-    msg.layout.dim[1].size = matrix.cols();
-    msg.layout.dim[0].stride = matrix.rows() * matrix.cols();
-    msg.layout.dim[1].stride = matrix.cols();
-
-    // 预分配数据空间
-    msg.data.resize(matrix.size());
-
-    // 使用Map直接映射内存
-    Eigen::Map<Eigen::Matrix<double, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>(
-        msg.data.data(), matrix.rows(), matrix.cols()) = matrix;
-}
-
-// 反向转换函数
-template <typename Derived>
-void float64MultiArrayToEigen(const std_msgs::msg::Float64MultiArray& msg,
-                              Eigen::MatrixBase<Derived>& matrix_out)
-{
-    matrix_out.derived() = Eigen::Map<
-        const Eigen::Matrix<double, Derived::RowsAtCompileTime, Derived::ColsAtCompileTime>>(
-        msg.data.data(), msg.layout.dim[0].size, msg.layout.dim[1].size);
-}
-
-/**
- * @brief 将Eigen矩阵转换为std::vector
- * @tparam MatrixType 必须是Eigen::MatrixBase的派生类
- * @param matrix 要转换的Eigen矩阵
- * @return 转换后的std::vector
- * @throws std::invalid_argument 如果输入矩阵为空
- */
-template <typename MatrixType>
-requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType>
-auto eigenToStdVector(const MatrixType& matrix) -> std::vector<typename MatrixType::Scalar>
-{
-    using Scalar = typename MatrixType::Scalar;
-
-    // 检查矩阵是否为空
-    if (matrix.size() == 0)
-    {
-        throw std::invalid_argument("The input Eigen matrix is empty (size 0).");
-    }
-
-    // 分配 std::vector 并将矩阵转换为一维存储
-    std::vector<Scalar> result(matrix.size());
-
-    try
-    {
-        // 使用 C++20 的 ranges::transform 和 reshaped
-        std::ranges::transform(
-            matrix.reshaped(), result.begin(), [](const Scalar& value) { return value; });
-    }
-    catch (const std::exception& e)
-    {
-        throw std::runtime_error(std::string("Error during Eigen to std::vector conversion: ")
-                                 + e.what());
-    }
-
-    return result;
-}
-
-/**
- * @brief 将std::vector转换为Eigen矩阵
- * @tparam MatrixType 必须是Eigen::MatrixBase的派生类
- * @param vec 要转换的std::vector
- * @param rows 目标矩阵的行数
- * @param cols 目标矩阵的列数
- * @return 转换后的Eigen矩阵
- * @throws std::invalid_argument 如果输入的std::vector为空或大小不匹配
- */
-template <typename MatrixType>
-requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType> MatrixType
-stdVectorToEigen(const std::vector<typename MatrixType::Scalar>& vec, int rows, int cols)
-{
-    using Scalar = typename MatrixType::Scalar;
-
-    // 检查矩阵的行列大小是否合理
-    if (rows <= 0 || cols <= 0)
-    {
-        throw std::invalid_argument(
-            "Invalid matrix dimensions: rows and cols must be greater than 0.");
-    }
-
-    // 检查 std::vector 的大小是否与目标矩阵匹配
-    if (vec.size() != static_cast<size_t>(rows * cols))
-    {
-        throw std::invalid_argument(
-            "The size of the std::vector does not match the specified matrix dimensions.");
-    }
-
-    // 创建矩阵并填充数据
-    MatrixType matrix(rows, cols);
-    try
-    {
-        for (int i = 0; i < rows; ++i)
-        {
-            for (int j = 0; j < cols; ++j)
-            {
-                // 按照 Column-Major 存储，将 vec 映射到 Eigen 矩阵
-                matrix(i, j) = vec[i + j * rows];
-            }
-        }
-    }
-    catch (const std::exception& e)
-    {
-        throw std::runtime_error(std::string("Error during std::vector to Eigen conversion: ")
-                                 + e.what());
-    }
-
-    return matrix;
-}
 
 /**
  * @brief 将Eigen矩阵高效转换为std::array
@@ -143,24 +27,20 @@ stdVectorToEigen(const std::vector<typename MatrixType::Scalar>& vec, int rows, 
  */
 template <typename MatrixType>
 requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType>
-    std::array<typename MatrixType::Scalar,
-               MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime>
+    std::array<typename MatrixType::Scalar, MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime>
     eigenToStdArray(const MatrixType& matrix)
 {
     using Scalar = typename MatrixType::Scalar;
 
     // 检查矩阵是否是固定大小
-    static_assert(MatrixType::RowsAtCompileTime != Eigen::Dynamic
-                      && MatrixType::ColsAtCompileTime != Eigen::Dynamic,
+    static_assert(MatrixType::RowsAtCompileTime != Eigen::Dynamic && MatrixType::ColsAtCompileTime != Eigen::Dynamic,
                   "Matrix must have fixed size at compile time");
 
     // 创建 std::array 并直接拷贝数据
     constexpr std::size_t size = MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime;
     std::array<Scalar, size> result;
-    Eigen::Map<Eigen::Matrix<Scalar,
-                             MatrixType::RowsAtCompileTime,
-                             MatrixType::ColsAtCompileTime,
-                             Eigen::ColMajor>>(result.data()) = matrix;
+    Eigen::Map<Eigen::Matrix<Scalar, MatrixType::RowsAtCompileTime, MatrixType::ColsAtCompileTime, Eigen::ColMajor>>(
+        result.data()) = matrix;
 
     return result;
 }
@@ -173,26 +53,111 @@ requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType>
  */
 template <typename MatrixType>
 requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType> MatrixType stdArrayToEigen(
-    const std::array<typename MatrixType::Scalar,
-                     MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime>& arr)
+    const std::array<typename MatrixType::Scalar, MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime>& arr)
 {
     using Scalar = typename MatrixType::Scalar;
 
     // 检查矩阵是否是固定大小
-    static_assert(MatrixType::RowsAtCompileTime != Eigen::Dynamic
-                      && MatrixType::ColsAtCompileTime != Eigen::Dynamic,
+    static_assert(MatrixType::RowsAtCompileTime != Eigen::Dynamic && MatrixType::ColsAtCompileTime != Eigen::Dynamic,
                   "Matrix must have fixed size at compile time");
 
     // 使用 Eigen::Map 将 std::array 映射为 Eigen 矩阵
     constexpr std::size_t size = MatrixType::RowsAtCompileTime * MatrixType::ColsAtCompileTime;
-    Eigen::Map<const Eigen::Matrix<Scalar,
-                                   MatrixType::RowsAtCompileTime,
-                                   MatrixType::ColsAtCompileTime,
-                                   Eigen::ColMajor>>
+    Eigen::Map<
+        const Eigen::Matrix<Scalar, MatrixType::RowsAtCompileTime, MatrixType::ColsAtCompileTime, Eigen::ColMajor>>
         mapped_matrix(arr.data());
 
     // 返回映射矩阵的副本
     return mapped_matrix;
+}
+
+/**
+ * @brief 将Eigen矩阵/向量高效转换为std::vector
+ * @tparam MatrixType Eigen矩阵/向量类型
+ * @param matrix 输入的Eigen矩阵/向量
+ * @return 转换后的std::vector
+ *
+ * @example
+ * ```cpp
+ * // 向量转换示例
+ * Eigen::Vector3d vec3d(1.0, 2.0, 3.0);
+ * std::vector<double> stdVec = eigenToStdVector(vec3d);
+ *
+ * // 矩阵转换示例
+ * Eigen::Matrix2d mat2d;
+ * mat2d << 1, 2, 3, 4;
+ * std::vector<double> stdVecMat = eigenToStdVector(mat2d);
+ * ```
+ */
+template <typename MatrixType>
+requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType> std::vector<typename MatrixType::Scalar>
+eigenToStdVector(const MatrixType& matrix)
+{
+    using Scalar = typename MatrixType::Scalar;
+    const size_t size = matrix.size();
+    std::vector<Scalar> result(size);
+
+    // 使用Eigen::Map直接访问内存，避免逐元素拷贝
+    Eigen::Map<Eigen::Matrix<Scalar, Eigen::Dynamic, 1>>(result.data(), size) =
+        Eigen::Map<const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>>(matrix.data(), size);
+
+    return result;
+}
+
+/**
+ * @brief 将std::vector高效转换为Eigen矩阵/���量
+ * @tparam MatrixType 目标Eigen矩阵/向量类型
+ * @param vec 输入的std::vector
+ * @return 转换后的Eigen矩阵/向量
+ * @throws std::invalid_argument 如果vector的大小与目标矩阵不匹配
+ *
+ * @example
+ * ```cpp
+ * // 向量转换示例
+ * std::vector<double> vec = {1.0, 2.0, 3.0};
+ * Eigen::Vector3d eigenVec = stdVectorToEigen<Eigen::Vector3d>(vec);
+ *
+ * // 矩阵转换示例
+ * std::vector<double> mat = {1.0, 2.0, 3.0, 4.0};
+ * Eigen::Matrix2d eigenMat = stdVectorToEigen<Eigen::Matrix2d>(mat);
+ *
+ * // 动态大小矩阵示例
+ * std::vector<double> dynVec = {1.0, 2.0, 3.0, 4.0, 5.0};
+ * Eigen::VectorXd eigenDynVec = stdVectorToEigen<Eigen::VectorXd>(dynVec);
+ * ```
+ */
+template <typename MatrixType>
+requires std::is_base_of_v<Eigen::MatrixBase<MatrixType>, MatrixType> MatrixType
+stdVectorToEigen(std::span<const typename MatrixType::Scalar> vec)
+{
+    using Scalar = typename MatrixType::Scalar;
+
+    if constexpr (MatrixType::SizeAtCompileTime != Eigen::Dynamic)
+    {
+        if (vec.size() != MatrixType::SizeAtCompileTime)
+        {
+            throw std::invalid_argument("Vector size does not match matrix dimensions");
+        }
+    }
+
+    MatrixType result;
+    if constexpr (MatrixType::SizeAtCompileTime == Eigen::Dynamic)
+    {
+        result.resize(vec.size(), 1);
+    }
+
+    // 使用Eigen::Map实现零拷贝转换
+    Eigen::Map<const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>> mapped(vec.data(), vec.size());
+    if constexpr (MatrixType::ColsAtCompileTime == 1)
+    {
+        result = mapped;
+    }
+    else
+    {
+        result = Eigen::Map<const MatrixType>(vec.data());
+    }
+
+    return result;
 }
 
 #include "eigen3/Eigen/Dense"
@@ -239,8 +204,7 @@ public:
     {
         const Eigen::Matrix<double, 4, 4> eye = Eigen::Matrix4d::Identity();
 
-        Eigen::Matrix<double, 4, 4> g =
-            (eye - 0.5 * hat2SE3(xi)).inverse() * (eye + 0.5 * hat2SE3(xi));
+        Eigen::Matrix<double, 4, 4> g = (eye - 0.5 * hat2SE3(xi)).inverse() * (eye + 0.5 * hat2SE3(xi));
         // Eigen::Quaterniond q(g.topLeftCorner<3, 3>());
         // g.topLeftCorner<3, 3>() = q.toRotationMatrix(); //保证旋转矩阵正交，但是会损失一点精度
 
@@ -277,8 +241,7 @@ public:
         Eigen::Vector3d closestAngles;
         for (int i = 0; i < 3; ++i)
         {
-            double wrappedCurrent =
-                std::fmod(currentAngles[i] + M_PI, 2 * M_PI) - M_PI;  // 将角度限制在[-π, π]
+            double wrappedCurrent = std::fmod(currentAngles[i] + M_PI, 2 * M_PI) - M_PI;  // 将角度限制在[-π, π]
             double wrappedPrevious = std::fmod(previousAngles[i] + M_PI, 2 * M_PI) - M_PI;
 
             // 计算两个可能的差异
