@@ -21,12 +21,10 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
 
     auto qos = rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data);
     imu_publisher_ = this->create_publisher<sensor_msgs::msg::Imu>("imu_data", qos);
-    joint_state_publisher_ =
-        this->create_publisher<sensor_msgs::msg::JointState>("joint_states", qos);
+    joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", qos);
     mujoco_msg_publisher_ = this->create_publisher<custom_msgs::msg::MujocoMsg>("mujoco_msg", qos);
 
-    timers_.emplace_back(
-        this->create_wall_timer(1ms, std::bind(&MujocoMsgHandler::publish_mujoco_callback, this)));
+    timers_.emplace_back(this->create_wall_timer(1ms, std::bind(&MujocoMsgHandler::publish_mujoco_callback, this)));
 
     // timers_.emplace_back(this->create_wall_timer(
     //     1ms, std::bind(&MujocoMsgHandler::joint_callback, this)));
@@ -38,9 +36,7 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
     //     100ms, std::bind(&MujocoMsgHandler::drop_old_message, this)));
 
     actuator_cmd_subscription_ = this->create_subscription<custom_msgs::msg::ActuatorCmds>(
-        "actuators_cmds",
-        qos,
-        std::bind(&MujocoMsgHandler::actuator_cmd_callback, this, std::placeholders::_1));
+        "actuators_cmds", qos, std::bind(&MujocoMsgHandler::actuator_cmd_callback, this, std::placeholders::_1));
 
     // param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this
     // );
@@ -52,8 +48,7 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
 
     RCLCPP_INFO(this->get_logger(), "Start MujocoMsgHandler ...");
 
-    std::string model_file =
-        this->get_parameter(model_param_name).get_parameter_value().get<std::string>();
+    std::string model_file = this->get_parameter(model_param_name).get_parameter_value().get<std::string>();
     mju::strcpy_arr(sim_->filename, model_file.c_str());
     sim_->uiloadrequest.fetch_add(1);
 }
@@ -72,9 +67,26 @@ void MujocoMsgHandler::publish_mujoco_callback()
     if (sim_->d_ != nullptr)
     {
         const std::unique_lock<std::recursive_mutex> lock(sim_->mtx);
-        imu_callback();
-        joint_callback();
-        contact_callback();
+
+        if (sim_->single_step_mode)
+        {
+            if (sim_->single_step_flag)
+            {
+                imu_callback();
+                joint_callback();
+                contact_callback();
+                sim_->single_step_flag = false;
+            }
+            else
+            {
+            }
+        }
+        else
+        {
+            imu_callback();
+            joint_callback();
+            contact_callback();
+        }
     }
 }
 
@@ -116,8 +128,7 @@ void MujocoMsgHandler::imu_callback()
 void MujocoMsgHandler::contact_callback()
 {
     auto msg = custom_msgs::msg::MujocoMsg();
-    std::vector<std::string> foot_geom_names = {
-        "toe1_contact", "toe2_contact", "toe3_contact", "toe4_contact"};
+    std::vector<std::string> foot_geom_names = {"toe1_contact", "toe2_contact", "toe3_contact", "toe4_contact"};
 
     std::vector<int> foot_geom_ids;
     for (const auto& foot_name : foot_geom_names)
@@ -199,8 +210,7 @@ void MujocoMsgHandler::joint_callback()
     }
 }
 
-void MujocoMsgHandler::actuator_cmd_callback(
-    const custom_msgs::msg::ActuatorCmds::SharedPtr msg) const
+void MujocoMsgHandler::actuator_cmd_callback(const custom_msgs::msg::ActuatorCmds::SharedPtr msg) const
 {
     if (!sim_ || !sim_->d_ || !sim_->m_)
     {
@@ -215,9 +225,8 @@ void MujocoMsgHandler::actuator_cmd_callback(
 
         if (actuator_id == -1)
         {
-            RCLCPP_WARN(rclcpp::get_logger("MuJoCo"),
-                        "Actuator '%s' not found in MuJoCo model.",
-                        actuator_name.c_str());
+            RCLCPP_WARN(
+                rclcpp::get_logger("MuJoCo"), "Actuator '%s' not found in MuJoCo model.", actuator_name.c_str());
             continue;
         }
         // Get the joint position and velocity directly from qpos and qvel
@@ -228,13 +237,11 @@ void MujocoMsgHandler::actuator_cmd_callback(
         double position_error = msg->pos[k] - joint_position;
         double velocity_error = msg->vel[k] - joint_velocity;
 
-        sim_->d_->ctrl[actuator_id] =
-            msg->kp[k] * position_error + msg->kd[k] * velocity_error + msg->torque[k];
+        sim_->d_->ctrl[actuator_id] = msg->kp[k] * position_error + msg->kd[k] * velocity_error + msg->torque[k];
 
         // Apply torque limits dynamically from the message
         double torque_limit = msg->torque_limit[k];
-        sim_->d_->ctrl[actuator_id] =
-            std::clamp(sim_->d_->ctrl[actuator_id], -torque_limit, torque_limit);
+        sim_->d_->ctrl[actuator_id] = std::clamp(sim_->d_->ctrl[actuator_id], -torque_limit, torque_limit);
     }
 }
 

@@ -38,14 +38,19 @@ void RobotControllerNode::trigger_callback(const std_msgs::msg::Bool::ConstShare
     ballanceController_->run();
     swingLegController_->run();
     jointController_->run();
-    // RCLCPP_INFO(this->get_logger(), "Trigger received, running ballance controller. w: %.3f", ballanceController_->w);
+
+    auto msg1 = jointController_->publishActuatorCmds();
+
+    publisher_->publish(msg1);
+    // RCLCPP_INFO(this->get_logger(), "Trigger received, running ballance controller. w: %.3f",
+    // ballanceController_->w);
 }
 
 void RobotControllerNode::publish_commands()
 {
-    auto msg = jointController_->publishActuatorCmds();
+    // auto msg = jointController_->publishActuatorCmds();
 
-    publisher_->publish(msg);
+    // publisher_->publish(msg);
 }
 
 void RobotControllerNode::on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event)

@@ -19,11 +19,7 @@ void SwingLegController::run()
 
     auto p_des = dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegPosition;
     auto v_des = dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegVelocity;
-    p_des.col(0) << 0, 0, -0.5;
-    p_des.col(1) << 0, 0, -0.5;
-    p_des.col(2) << 0, 0, -0.5;
-    p_des.col(3) << 0, 0, -0.5;
-    v_des << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0;
+
     mat34 f = kp.cwiseProduct(p_des - p) + kd.cwiseProduct(v_des - v);
     robot_controller::SwingLegController sw;
     sw.f = f;
