@@ -1,17 +1,19 @@
 #include "robot_software/robot_estimator/LinearKalmanFilter.h"
 
+#include "robot_software/robot_utils/DataCenter.hpp"
 #include "robot_software/robot_utils/UtilFunc.h"
 
 namespace Galileo
 {
 
 LinearKalmanFilter::LinearKalmanFilter()
+    : dataCenter_(DataCenter::getInstance())
 {
     // 初始化状态向量
     x_.setZero();
 
     // 初始化协方差矩阵
-    P_.setIdentity() * 1e-3;
+    P_.setIdentity();
 
     // 初始化测量矩阵
     H_.setZero();
@@ -40,61 +42,74 @@ void LinearKalmanFilter::updateStateTransitionMatrix()
     // 位置更新
     F_.block<3, 3>(0, 6) = Eigen::Matrix3d::Identity() * DT;
 
-    // 速度保���不变
+    // 速度保持不变
     // 角度保持不变
 }
 
-Eigen::Matrix3d LinearKalmanFilter::eulerToRotation(const Eigen::Vector3d& euler)
-{
-    // 使用ZYX顺序的欧拉角，并调用.matrix()转换为旋转矩阵
-    return (Eigen::AngleAxisd(euler[0], Eigen::Vector3d::UnitZ()) * Eigen::AngleAxisd(euler[1], Eigen::Vector3d::UnitY()) * Eigen::AngleAxisd(euler[2], Eigen::Vector3d::UnitX())).matrix();
-}
-
-void LinearKalmanFilter::predict(const Eigen::Vector3d& acc)
+void LinearKalmanFilter::predict(const Eigen::Vector3d& acc, const Eigen::Matrix3d& R)
 {
     // 获取当前姿态
     Eigen::Vector3d euler = x_.segment<3>(3);
-    Eigen::Matrix3d R = eulerToRotation(euler);
 
     // 更新状态
-    x_.segment<3>(0) += x_.segment<3>(6) * DT + 0.5 * (R * acc + gravity_) * DT * DT;  // 位置更新
-    x_.segment<3>(6) += (R * acc + gravity_) * DT;                                     // 速度更新
+    Eigen::Vector3d pos_update = x_.segment<3>(6) * DT + 0.5 * (R * acc + gravity_) * DT * DT;
+    x_.segment<3>(0) += pos_update;
+
+    Eigen::Vector3d vel_update = (R * acc + gravity_) * DT;
+    x_.segment<3>(6) += vel_update;
 
     // 更新协方差
     P_ = F_ * P_ * F_.transpose() + Q_;
 }
 
-void LinearKalmanFilter::update(const Eigen::Vector3d& measured_angle,
-                                const Eigen::Vector3d& measured_velocity)
+void LinearKalmanFilter::update(const Eigen::Vector3d& measured_angle, const Eigen::Vector3d& measured_velocity)
 {
     // 构造测量向量
     Eigen::Matrix<double, MEAS_DIM, 1> z;
     z << measured_angle, measured_velocity;
 
     // 计算卡尔曼增益
-    Eigen::Matrix<double, STATE_DIM, MEAS_DIM> K =
-        P_ * H_.transpose() * (H_ * P_ * H_.transpose() + R_).inverse();
+    Eigen::Matrix<double, STATE_DIM, MEAS_DIM> K = P_ * H_.transpose() * (H_ * P_ * H_.transpose() + R_).inverse();
+
+    // 计算创新
+    Eigen::Matrix<double, MEAS_DIM, 1> innovation = z - H_ * x_;
 
     // 更新状态
-    x_ += K * (z - H_ * x_);
+    x_ += K * innovation;
 
-    // ���新协方差
+    // 更新协方差
     Eigen::Matrix<double, STATE_DIM, STATE_DIM> I = Eigen::Matrix<double, STATE_DIM, STATE_DIM>::Identity();
     P_ = (I - K * H_) * P_;
-
-    // 标准化角度到[-pi, pi]
-    x_.segment<3>(3) = UtilFnc::normalizeAngles(x_.segment<3>(3));
 }
 
-void LinearKalmanFilter::run(const Eigen::Vector3d& measured_acc,
-                             const Eigen::Vector3d& measured_angle,
-                             const Eigen::Vector3d& measured_velocity)
+void LinearKalmanFilter::run()
 {
-    // 预测步骤
-    predict(measured_acc);
+    // 从DataCenter读取数据
+    auto baseState = dataCenter_.read<robot_state::BaseState>();
+    auto phase = dataCenter_.read<robot_FSM::legState>()->legPhase;
+    auto legVeloInWorld = dataCenter_.read<robot_state::LegState>()->legVeloInWorld;
+    auto legPosInWorld = dataCenter_.read<robot_state::LegState>()->legPosHipInWorld;
 
-    // 更新步骤
-    update(measured_angle, measured_velocity);
+    // 使用DataCenter中的数据
+    Eigen::Vector3d acc = baseState->acceleration;
+    Eigen::Vector3d angle = baseState->eulerAngles;
+    Eigen::Matrix3d Rot = baseState->rotationMatrix;
+    Eigen::Vector3d velocity = -legVeloInWorld * phase.cast<double>() / phase.sum();
+    
+    if (phase.sum() == 0) velocity = Eigen::Vector3d::Zero();
+
+    predict(acc, Rot);
+    update(angle, velocity);
+    Eigen::Vector3d x_j = -legPosInWorld * phase.cast<double>() / phase.sum();
+    x_(2) = x_j(2);
+    if (phase.sum() == 0) x_(2) = 0;
+
+    baseState->positionRelative = x_j;
+
+    baseState->position = x_.segment<3>(0);
+    baseState->eulerAngles = x_.segment<3>(3);
+    baseState->linearVelocity = x_.segment<3>(6);
+
+    dataCenter_.write(baseState);
 }
-
 }  // namespace Galileo

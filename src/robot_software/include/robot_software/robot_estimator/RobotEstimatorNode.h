@@ -29,7 +29,8 @@ public:
 
 private:
     // 扩展卡尔曼滤波器
-    std::shared_ptr<EskfOnSe3> eskf_;
+    std::unique_ptr<EskfOnSe3> eskf_;
+    std::unique_ptr<LinearKalmanFilter> lkf_;
 
     // 订阅触发信号
     rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr triggerSub_;

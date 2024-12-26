@@ -33,14 +33,19 @@ def generate_launch_description():
             output='screen',
             parameters=[config_file]
         ),
-        Node(
-            package='foxglove_bridge',
-            executable='foxglove_bridge',
-            name='foxglove_bridge',
+        # Node(
+        #     package='foxglove_bridge',
+        #     executable='foxglove_bridge',
+        #     name='foxglove_bridge'
+        #     ,output='screen',
+        #     prefix='terminator -x bash -c'
+        # ),
+        ExecuteProcess(
+            cmd=['gnome-terminal', '--', 'ros2', 'run', 'keyboard_control', 'keyboard_publisher'],
             output='screen'
         ),
         ExecuteProcess(
-            cmd=['gnome-terminal', '--', 'ros2', 'run', 'keyboard_control', 'keyboard_publisher'],
+            cmd=['terminator', '-x', 'ros2', 'run', 'foxglove_bridge', 'foxglove_bridge'],
             output='screen'
         )
     ])

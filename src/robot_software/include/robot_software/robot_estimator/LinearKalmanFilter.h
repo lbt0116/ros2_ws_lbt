@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 
 #include "robot_software/robot_interface/PinocchioInterfaceNode.h"
+#include "robot_software/robot_utils/DataCenter.hpp"
 
 namespace Galileo
 {
@@ -28,11 +29,11 @@ private:
     // 重力向量
     const Eigen::Vector3d gravity_{0, 0, -9.81};
 
+    DataCenter& dataCenter_;
+
     // 更新状态转移矩阵
     void updateStateTransitionMatrix();
 
-    // 从欧拉角计算旋转矩阵
-    Eigen::Matrix3d eulerToRotation(const Eigen::Vector3d& euler);
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -40,21 +41,27 @@ public:
     LinearKalmanFilter();
 
     // 预测步骤
-    void predict(const Eigen::Vector3d& acc);
+    void predict(const Eigen::Vector3d& acc, const Eigen::Matrix3d& R);
 
     // 更新步骤
-    void update(const Eigen::Vector3d& measured_angle,
-                const Eigen::Vector3d& measured_velocity);
+    void update(const Eigen::Vector3d& measured_angle, const Eigen::Vector3d& measured_velocity);
 
     // 获取估计状态
-    Eigen::Vector3d getPosition() const { return x_.segment<3>(0); }
-    Eigen::Vector3d getAngle() const { return x_.segment<3>(3); }
-    Eigen::Vector3d getVelocity() const { return x_.segment<3>(6); }
+    Eigen::Vector3d getPosition() const
+    {
+        return x_.segment<3>(0);
+    }
+    Eigen::Vector3d getAngle() const
+    {
+        return x_.segment<3>(3);
+    }
+    Eigen::Vector3d getVelocity() const
+    {
+        return x_.segment<3>(6);
+    }
 
     // 统一的入口函数
-    void run(const Eigen::Vector3d& measured_acc,
-             const Eigen::Vector3d& measured_angle,
-             const Eigen::Vector3d& measured_velocity);
+    void run();
 };
 
 }  // namespace Galileo

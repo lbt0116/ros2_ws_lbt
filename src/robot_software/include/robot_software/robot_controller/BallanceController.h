@@ -40,8 +40,8 @@ private:
     vec6 s_vec{1, 1, 1, 1, 1, 1};
 
     // 辅助函数
-    std::tuple<vec12, vec12> get_current_and_target_state() const;
-    vec6 compute_balance_force(const vec12& state, const vec12& state_des) const;
+    vec12 get_state_error() const;
+    vec6 compute_balance_force(const vec12& state_error) const;
     Eigen::Matrix<double, 6, 3> build_friction_cone_constraints() const;
 };
 

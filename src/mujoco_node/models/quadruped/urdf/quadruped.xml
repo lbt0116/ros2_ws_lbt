@@ -196,6 +196,7 @@
         <force name="forcesensor3" site="site_forcesensor3" cutoff="5000.0"/>
         <force name="forcesensor4" site="site_forcesensor4" cutoff="5000.0"/>
 
+        <framequat name="imu_quat" objtype="site" objname="site_imu" />
         <accelerometer name="imu_acc" site="site_imu"/>
         <gyro name="imu_gyro" site="site_imu"/>
     </sensor>

@@ -101,17 +101,31 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
 
     pin_->robotConstants.mass = data.mass[0];
     pin_->robotConstants.inertiaMatrix = model.inertias[0].inertia().matrix();
-    pin_->robotConstants.spatialInertiaMatrix << model.inertias[0].inertia().matrix(),
-        Eigen::Matrix3d::Zero(), Eigen::Matrix3d::Zero(),
-        data.mass[0] * Eigen::Matrix3d::Identity();
+    pin_->robotConstants.spatialInertiaMatrix << model.inertias[0].inertia().matrix(), Eigen::Matrix3d::Zero(),
+        Eigen::Matrix3d::Zero(), data.mass[0] * Eigen::Matrix3d::Identity();
 
     pin_->jointState.jointPosition = sensorData->jointPosition;
     pin_->jointState.jointVelocity = sensorData->jointVelocity;
     pin_->jointState.jointTorque = sensorData->jointTorque;
 
     pin_->baseState.rotationMatrix = data.oMi[1].rotation();
-    pin_->baseState.acceleration = sensorData->imuAcc;
-    pin_->baseState.angularVelocity = sensorData->imuAngvelo;
+    pin_->baseState.quaternion = sensorData->imuQuant;
+
+
+    auto normalize_angle = [](double angle) -> double
+    {
+        while (angle > M_PI) angle -= 2.0 * M_PI;
+        while (angle < -M_PI) angle += 2.0 * M_PI;
+        return angle;
+    };
+    // pin_->baseState.eulerAngles = data.oMi[1].rotation().eulerAngles(0, 1, 2);
+    pin_->baseState.eulerAngles(0) = (data.oMi[1].rotation().eulerAngles(2, 1, 0)[2]);
+    pin_->baseState.eulerAngles(1) = (data.oMi[1].rotation().eulerAngles(2, 1, 0)[1]);
+    // pin_->baseState.eulerAngles(2) = normalize_angle(data.oMi[1].rotation().eulerAngles(0, 1, 2)[2]);
+    pin_->baseState.eulerAngles(2) = data.oMi[1].rotation().eulerAngles(2, 1, 0)[0];
+
+    pin_->baseState.acceleration = data.oMi[1].rotation() * sensorData->imuAcc;
+    pin_->baseState.angularVelocity = data.oMi[1].rotation() * sensorData->imuAngvelo;
 
     for (int leg = 0; leg < 4; ++leg)
     {
@@ -135,8 +149,7 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
 
         // ---- 4. 计算足端相对于机身的直接位置 ----
         // 足端相对于机身在机身坐标系中的位置
-        Eigen::Vector3d foot_pos_in_body =
-            base_pose_in_world.actInv(foot_pose_in_world).translation();
+        Eigen::Vector3d foot_pos_in_body = base_pose_in_world.actInv(foot_pose_in_world).translation();
         pin_->legState.legPosBaseInBody.col(leg) = foot_pos_in_body;
 
         // 足端相对于机身在世界坐标系中的位置
@@ -144,13 +157,11 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
 
         // ---- 5. 计算足端相对于髋关节的位置 ----
         // 足端相对于髋关节在世界坐标系中的位置
-        Eigen::Vector3d foot_pos_rel_hip_in_world =
-            hip_pose_in_world.actInv(foot_pose_in_world).translation();
-        pin_->legState.legPosHipInWorld.col(leg) = foot_pos_rel_hip_in_world;
+        pin_->legState.legPosHipInWorld.col(leg) = foot_pose_in_world.translation() - hip_pose_in_world.translation();
 
         // 足端相对于髋关节在机身坐标系中的位置
         Eigen::Vector3d foot_pos_rel_hip_in_body =
-            base_pose_in_world.actInv(hip_pose_in_world).rotation() * foot_pos_rel_hip_in_world;
+            base_pose_in_world.actInv(hip_pose_in_world).rotation() * pin_->legState.legPosHipInWorld.col(leg);
         pin_->legState.legPosHipInBody.col(leg) = foot_pos_rel_hip_in_body;
 
         // ---- 6. 提取速度信息 ----
@@ -162,8 +173,7 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
             pinocchio::getFrameVelocity(model, data, hip_frame_id, pinocchio::LOCAL_WORLD_ALIGNED);
 
         // 足端相对于髋关节的速度（世界坐标系）
-        Eigen::Vector3d foot_vel_rel_hip_in_world =
-            foot_vel_in_world.linear() - hip_vel_in_world.linear();
+        Eigen::Vector3d foot_vel_rel_hip_in_world = foot_vel_in_world.linear() - hip_vel_in_world.linear();
         pin_->legState.legVeloInWorld.col(leg) = foot_vel_rel_hip_in_world;
 
         // 足端相对于髋关节的速度（机身坐标系）
@@ -187,6 +197,7 @@ PinocchioInterfaceNode::PinocchioInterfaceNode()
         "trigger",
         rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data),
         std::bind(&PinocchioInterfaceNode::trigger_callback, this, std::placeholders::_1));
+    RCLCPP_INFO(this->get_logger(), "PinocchioInterfaceNode initialized");
 }
 
 PinocchioInterfaceNode::~PinocchioInterfaceNode() = default;

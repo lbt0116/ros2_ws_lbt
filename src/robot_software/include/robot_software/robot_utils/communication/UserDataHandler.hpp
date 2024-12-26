@@ -19,7 +19,7 @@ public:
         // leg
         msg.leg_pos = eigenToStdArray(dataCenter_.read<robot_state::LegState>()->legPosHipInWorld);
 
-        msg.leg_pos_des = eigenToStdArray(dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->p);
+        msg.leg_pos_des = eigenToStdArray(dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegPosition);
 
         msg.gait_cmd = dataCenter_.read<robot_user_cmd::UserCmd>()->gaitCmd;
 
@@ -37,6 +37,14 @@ public:
 
         msg.base_ang_vel_des =
             eigenToStdArray(dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetAngularVelocity);
+
+        msg.base_pos = eigenToStdArray(dataCenter_.read<robot_state::BaseState>()->position);
+
+        msg.base_ang = eigenToStdArray(dataCenter_.read<robot_state::BaseState>()->eulerAngles);
+
+        msg.base_vel = eigenToStdArray(dataCenter_.read<robot_state::BaseState>()->linearVelocity);
+
+        msg.base_ang_vel = eigenToStdArray(dataCenter_.read<robot_state::BaseState>()->angularVelocity);
 
         return msg;
     }

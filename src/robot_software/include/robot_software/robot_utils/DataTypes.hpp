@@ -55,11 +55,12 @@ struct LegState
 struct BaseState
 {
     vec3 position;
-    vec3 eulerAngles;      // 欧拉角
-    mat33 rotationMatrix;  // 旋转矩阵
-    vec4 quaternion;       // 四元数
-    vec3 linearVelocity;   // 线速度
-    vec3 angularVelocity;  // 角速度
+    vec3 positionRelative;  // 相对于基座的位置
+    vec3 eulerAngles;       // 欧拉角
+    mat33 rotationMatrix;   // 旋转矩阵
+    vec4 quaternion;        // 四元数
+    vec3 linearVelocity;    // 线速度
+    vec3 angularVelocity;   // 角速度
 
     vec3 acceleration;
 };
@@ -96,19 +97,38 @@ struct TargetBaseTrajectory
 
 struct TargetLegTrajectory
 {
-    mat34 p;
-    mat34 v;
-    mat34 a;
-    mat34 toeLocation;
+    mat34 targetLegPosition = mat34::Zero();  //{0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5}
+    mat34 targetLegVelocity = mat34::Zero();
+    mat34 targetLegAcceleration = mat34::Zero();
+    mat34 targetToeLocation = mat34::Zero();
 };
 
 struct TargetJointTrajectory
 {
-    mat34 targetJointPosition;
-    mat34 targetJointVelocity;
-    mat34 targetJointTorque;
+    mat34 targetJointPosition = mat34::Zero();
+    mat34 targetJointVelocity = mat34::Zero();
+    mat34 targetJointTorque = mat34::Zero();
 };
 }  // namespace robot_target_trajectory
+
+namespace robot_controller
+{
+struct BallanceController
+{
+    mat34 f;
+};
+
+struct SwingLegController
+{
+    mat34 f;
+};
+
+struct JointController
+{
+    mat34 composedLegForce;
+    mat34 tau;
+};
+}  // namespace robot_controller
 
 namespace robot_user_cmd
 {
@@ -117,6 +137,7 @@ struct UserCmd
     vec3 veloCmd = {0, 0, 0};
     vec3 angveloCmd = {0, 0, 0};
     int gaitCmd = 0;
+    int ctrlType = 0;
     bool isKeyPressed = false;
 };
 }  // namespace robot_user_cmd

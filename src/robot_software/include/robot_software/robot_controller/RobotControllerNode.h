@@ -3,6 +3,8 @@
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "robot_software/robot_controller/BallanceController.h"
+#include "robot_software/robot_controller/JointController.h"
+#include "robot_software/robot_controller/SwingLegController.h"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "std_msgs/msg/bool.hpp"
 
@@ -37,8 +39,13 @@ private:
     DataCenter& dataCenter;
 
     std::unique_ptr<BallanceController> ballanceController_;
+    std::unique_ptr<SwingLegController> swingLegController_;
+    std::unique_ptr<JointController> jointController_;
 
     // 动态参数回调函数
     rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;  // 订阅者
+
+    // 参数事件处理
+    void on_parameter_event(const rcl_interfaces::msg::ParameterEvent::SharedPtr event);
 };
 }  // namespace Galileo

@@ -5,6 +5,7 @@ namespace Galileo
 RobotBasePlanner::RobotBasePlanner()
     : dataCenter(DataCenter::getInstance())
 {
+    
 }
 
 RobotBasePlanner::~RobotBasePlanner()
@@ -38,8 +39,7 @@ void RobotBasePlanner::update_base_trajectory()
         return current + diff.normalized() * max_delta;
     };
 
-    baseTrajectory.targetLinearVelocity =
-        updateVelocity(baseTrajectory.targetLinearVelocity, v_d, 10);
+    baseTrajectory.targetLinearVelocity = updateVelocity(baseTrajectory.targetLinearVelocity, v_d, 10);
 
     baseTrajectory.targetPosition += v_d * 0.001;
 
@@ -52,15 +52,12 @@ void RobotBasePlanner::update_base_trajectory()
     w_d(1) = std::clamp(w_d(1), -1.0, 1.0);
     w_d(2) = std::clamp(w_d(2), -2.0, 2.0);
 
-    baseTrajectory.targetAngularVelocity =
-        updateVelocity(baseTrajectory.targetAngularVelocity, w_d, 2);  // 5 rad/s^2
+    baseTrajectory.targetAngularVelocity = updateVelocity(baseTrajectory.targetAngularVelocity, w_d, 2);  // 5 rad/s^2
 
     baseTrajectory.targetEulerAngles += w_d * 0.001;
 
-    baseTrajectory.targetEulerAngles(0) =
-        std::clamp(baseTrajectory.targetEulerAngles(0), -2 * M_PI / 3, 2 * M_PI / 3);
-    baseTrajectory.targetEulerAngles(1) =
-        std::clamp(baseTrajectory.targetEulerAngles(1), -2 * M_PI / 3, 2 * M_PI / 3);
+    baseTrajectory.targetEulerAngles(0) = std::clamp(baseTrajectory.targetEulerAngles(0), -2 * M_PI / 3, 2 * M_PI / 3);
+    baseTrajectory.targetEulerAngles(1) = std::clamp(baseTrajectory.targetEulerAngles(1), -2 * M_PI / 3, 2 * M_PI / 3);
 
     dataCenter.write(baseTrajectory);
 }

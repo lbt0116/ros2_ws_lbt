@@ -7,6 +7,7 @@ RobotLegPlanner::RobotLegPlanner()
     : dataCenter(DataCenter::getInstance())
 {
     state.initToeLocation << 0, 0, 0, 0, 0, 0, 0, 0, -0.5, -0.5, -0.5, -0.5;
+    legTrajectory.targetLegPosition << 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5;
 }
 
 RobotLegPlanner::~RobotLegPlanner()
@@ -19,9 +20,7 @@ void RobotLegPlanner::update_leg_trajectory()
     LegPlanningState state = get_current_state();
 
     // 2. 计算目标落足点
-    raibert_foot_location(state.initCoMVelo,
-                          state.targetBaseVelo,
-                          GaitSchedules::getGaitByTag(state.gaitCmd).swing_T);
+    raibert_foot_location(state.initCoMVelo, state.targetBaseVelo, GaitSchedules::getGaitByTag(state.gaitCmd).swing_T);
 
     // 3. 计算目标速度
     mat34 targetToeVelo = calculate_target_velocity(state.targetBaseVelo);
@@ -67,8 +66,7 @@ mat34 RobotLegPlanner::calculate_target_velocity(const vec3 &targetBaseVelo)
     return targetToeVelo;
 }
 
-void RobotLegPlanner::generate_leg_trajectories(const LegPlanningState &state,
-                                                const mat34 &targetToeVelo)
+void RobotLegPlanner::generate_leg_trajectories(const LegPlanningState &state, const mat34 &targetToeVelo)
 {
     const auto &gaitSchedule = GaitSchedules::getGaitByTag(state.gaitCmd);
 
@@ -78,7 +76,7 @@ void RobotLegPlanner::generate_leg_trajectories(const LegPlanningState &state,
         {
             get_swing_target(state.initToeLocation,
                              state.initToeVelo,
-                             legTrajectory.toeLocation,
+                             legTrajectory.targetToeLocation,
                              targetToeVelo,
                              gaitSchedule.swingHeight,
                              dataCenter.read<robot_FSM::legState>()->timeSw(i),
@@ -131,14 +129,14 @@ void RobotLegPlanner::raibert_foot_location(const vec3 &v, const vec3 &vd, doubl
     {
         // X方向
         double xOff = (i == 0 || i == 2) ? xOffset : -xOffset;
-        legTrajectory.toeLocation(0, i) = 0.5 * v(0) * T + kv * (v(0) - vd(0)) + xOff;
+        legTrajectory.targetToeLocation(0, i) = 0.5 * v(0) * T + kv * (v(0) - vd(0)) + xOff;
 
         // Y方向
         double yOff = (i < 2) ? -yOffset : yOffset;
-        legTrajectory.toeLocation(1, i) = 0.5 * v(1) * T + kv * (v(1) - vd(1)) + yOff;
+        legTrajectory.targetToeLocation(1, i) = 0.5 * v(1) * T + kv * (v(1) - vd(1)) + yOff;
     }
 
-    legTrajectory.toeLocation += turn;
+    legTrajectory.targetToeLocation += turn;
 
     // 设置目标速度
     // legTrajectory.v.setZero();
@@ -200,9 +198,18 @@ void RobotLegPlanner::get_swing_target(const mat34 &initToeLocation,
                             T);
 
     // 获取当前时刻的位置、速度和加速度
-    trajX.evaluate(t, legTrajectory.p(0, i), legTrajectory.v(0, i), legTrajectory.a(0, i));
-    trajY.evaluate(t, legTrajectory.p(1, i), legTrajectory.v(1, i), legTrajectory.a(1, i));
-    trajZ.evaluate(t, legTrajectory.p(2, i), legTrajectory.v(2, i), legTrajectory.a(2, i));
+    trajX.evaluate(t,
+                   legTrajectory.targetLegPosition(0, i),
+                   legTrajectory.targetLegVelocity(0, i),
+                   legTrajectory.targetLegAcceleration(0, i));
+    trajY.evaluate(t,
+                   legTrajectory.targetLegPosition(1, i),
+                   legTrajectory.targetLegVelocity(1, i),
+                   legTrajectory.targetLegAcceleration(1, i));
+    trajZ.evaluate(t,
+                   legTrajectory.targetLegPosition(2, i),
+                   legTrajectory.targetLegVelocity(2, i),
+                   legTrajectory.targetLegAcceleration(2, i));
 }
 
 void RobotLegPlanner::get_stance_target(const mat34 &initToeLocation,
@@ -218,19 +225,19 @@ void RobotLegPlanner::get_stance_target(const mat34 &initToeLocation,
     // a = 0
 
     // 位置：线性积分
-    legTrajectory.p(0, i) = initToeLocation(0, i) - targetBaseVelo(0) * t;
-    legTrajectory.p(1, i) = initToeLocation(1, i) - targetBaseVelo(1) * t;
-    legTrajectory.p(2, i) = initToeLocation(2, i);  // Z方向保持不变
+    legTrajectory.targetLegPosition(0, i) = initToeLocation(0, i) - targetBaseVelo(0) * t;
+    legTrajectory.targetLegPosition(1, i) = initToeLocation(1, i) - targetBaseVelo(1) * t;
+    legTrajectory.targetLegPosition(2, i) = initToeLocation(2, i);  // Z方向保持不变
 
     // 速度：与base期望速度相反
-    legTrajectory.v(0, i) = -targetBaseVelo(0);
-    legTrajectory.v(1, i) = -targetBaseVelo(1);
-    legTrajectory.v(2, i) = 0.0;  // Z方向速度为0
+    legTrajectory.targetLegVelocity(0, i) = -targetBaseVelo(0);
+    legTrajectory.targetLegVelocity(1, i) = -targetBaseVelo(1);
+    legTrajectory.targetLegVelocity(2, i) = 0.0;  // Z方向速度为0
 
     // 加速度：全部为0
-    legTrajectory.a(0, i) = 0.0;
-    legTrajectory.a(1, i) = 0.0;
-    legTrajectory.a(2, i) = 0.0;
+    legTrajectory.targetLegAcceleration(0, i) = 0.0;
+    legTrajectory.targetLegAcceleration(1, i) = 0.0;
+    legTrajectory.targetLegAcceleration(2, i) = 0.0;
 }
 
 }  // namespace Galileo

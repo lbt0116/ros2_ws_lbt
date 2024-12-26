@@ -28,6 +28,11 @@ public:
 
             case 'p': user_cmd_.gaitCmd = 0; break;  // 站立
             case '7': user_cmd_.gaitCmd = 1; break;  // 行走
+            
+            
+            case '1': user_cmd_.ctrlType = 1; break;  // likong
+
+
         }
         // user_cmd_.isKeyPressed = true;
         data_center_.write(user_cmd_);

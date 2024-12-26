@@ -42,7 +42,7 @@ void EskfOnSe3::updateStates(const Eigen::Matrix<int, 4, 1>& phase)
     auto baseState = dataCenter_.read<robot_state::BaseState>();
     auto jointState = dataCenter_.read<robot_state::JointState>();
     auto robotConstants = dataCenter_.read<robot_constants>();
-    auto legState = dataCenter_.read<robot_state::LegState>();
+    auto legState = dataCenter_.read<robot_state::LegState>();// TODO
 
     totalMass_ = robotConstants->mass;
 

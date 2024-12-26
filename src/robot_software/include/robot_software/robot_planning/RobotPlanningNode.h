@@ -4,6 +4,7 @@
 #include <std_msgs/msg/bool.hpp>
 
 #include "robot_software/robot_planning/RobotBasePlanner.h"
+#include "robot_software/robot_planning/RobotJointPlanner.h"
 #include "robot_software/robot_planning/RobotLegPlanner.h"
 #include "robot_software/robot_utils/DataCenter.hpp"
 namespace Galileo
@@ -26,5 +27,6 @@ private:
 
     std::unique_ptr<RobotLegPlanner> legPlanner_;
     std::unique_ptr<RobotBasePlanner> basePlanner_;
+    std::unique_ptr<RobotJointPlanner> jointPlanner_;
 };
 }  // namespace Galileo
