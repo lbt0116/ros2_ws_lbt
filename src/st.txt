@@ -1,0 +1,48 @@
+[01;34m.[0m
+├── [01;34mcustom_msgs[0m
+│   └── [01;34mmsg[0m
+├── [01;34mkeyboard_control[0m
+│   ├── [01;34minclude[0m
+│   │   └── [01;34mkeyboard_control[0m
+│   └── [01;34msrc[0m
+├── [01;34mmujoco_node[0m
+│   ├── [01;34mcmake[0m
+│   ├── [01;34minclude[0m
+│   │   └── [01;34mmujoco_node[0m
+│   ├── [01;34mmodels[0m
+│   │   └── [01;34mquadruped[0m
+│   │       ├── [01;34mconfig[0m
+│   │       ├── [01;34mlaunch[0m
+│   │       ├── [01;34mmeshes[0m
+│   │       ├── [01;34mtextures[0m
+│   │       └── [01;34murdf[0m
+│   └── [01;34msrc[0m
+└── [01;34mrobot_software[0m
+    ├── [01;34minclude[0m
+    │   └── [01;34mrobot_software[0m
+    │       ├── [01;34mrobot_controller[0m
+    │       │   ├── [01;34mbasic_controller[0m
+    │       │   └── [01;34mnmpc_controller[0m
+    │       ├── [01;34mrobot_dynamics[0m
+    │       ├── [01;34mrobot_estimator[0m
+    │       ├── [01;34mrobot_FSM[0m
+    │       ├── [01;34mrobot_interface[0m
+    │       ├── [01;34mrobot_kinematics[0m
+    │       ├── [01;34mrobot_planning[0m
+    │       ├── [01;34mrobot_utils[0m
+    │       │   └── [01;34mcommunication[0m
+    │       └── [01;34mthird_party[0m
+    │           └── [01;34mquadprog[0m
+    └── [01;34msrc[0m
+        ├── [01;34mrobot_controller[0m
+        │   ├── [01;34mbasic_controller[0m
+        │   └── [01;34mnmpc_controller[0m
+        ├── [01;34mrobot_dynamics[0m
+        ├── [01;34mrobot_estimator[0m
+        ├── [01;34mrobot_FSM[0m
+        ├── [01;34mrobot_interface[0m
+        ├── [01;34mrobot_kinematics[0m
+        ├── [01;34mrobot_planning[0m
+        └── [01;34mrobot_utils[0m
+
+45 directories

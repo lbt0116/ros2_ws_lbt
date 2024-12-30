@@ -37,14 +37,14 @@ MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
 
     actuator_cmd_subscription_ = this->create_subscription<custom_msgs::msg::ActuatorCmds>(
         "actuators_cmds", qos, std::bind(&MujocoMsgHandler::actuator_cmd_callback, this, std::placeholders::_1));
+    sim_msg_subscription_ = this->create_subscription<custom_msgs::msg::ToSimMsg>(
+        "simulation", 1, std::bind(&MujocoMsgHandler::sim_msg_callback, this, std::placeholders::_1));
 
     // param_subscriber_ = std::make_shared<rclcpp::ParameterEventHandler>(this
     // );
     // cb_handle_ = param_subscriber_->add_parameter_callback(
     //     model_param_name, std::bind(&MujocoMsgHandler::parameter_callback,
     //                                 this, std::placeholders::_1));
-
-    actuator_cmds_ptr_ = std::make_shared<ActuatorCmds>();
 
     RCLCPP_INFO(this->get_logger(), "Start MujocoMsgHandler ...");
 
@@ -251,5 +251,27 @@ void MujocoMsgHandler::parameter_callback(const rclcpp::Parameter&)
 
 void MujocoMsgHandler::drop_old_message()
 {
+}
+
+void MujocoMsgHandler::sim_msg_callback(const custom_msgs::msg::ToSimMsg::SharedPtr msg)
+{
+    if (msg->start_simulation)
+    {
+        for (size_t k = 0; k < msg->actuators_name.size(); k++)
+        {
+            const std::string& actuator_name = msg->actuators_name[k];
+            int actuator_id = mj_name2id(sim_->m_, mjOBJ_ACTUATOR, actuator_name.c_str());
+            int joint_id = mj_name2id(sim_->m_, mjOBJ_JOINT, actuator_name.c_str());
+
+            if (actuator_id == -1)
+            {
+                RCLCPP_WARN(
+                    rclcpp::get_logger("MuJoCo"), "Actuator '%s' not found in MuJoCo model.", actuator_name.c_str());
+                continue;
+            }
+            // Get the joint position and velocity directly from qpos and qvel
+            sim_->d_->qpos[sim_->m_->jnt_qposadr[joint_id]] = msg->initial_joint_positions[k];
+        }
+    }
 }
 }  // namespace Galileo

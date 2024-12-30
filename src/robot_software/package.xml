@@ -17,6 +17,8 @@
     <depend>std_msgs</depend>
     <depend>message_filters</depend>
     <depend>tbb</depend>
+    <depend>rosbag2_cpp</depend>
+    <depend>rosbag2_storage</depend>
     <!--    <depend>pinocchio</depend>-->
 
     <test_depend>ament_lint_auto</test_depend>

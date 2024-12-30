@@ -26,8 +26,8 @@ private:
     mat34 kp;
     mat34 kd;
 
-    void composeLegForce();
-    void computeJointTorque();
+    void compose_leg_force();
+    void compute_joint_torque();
 
     robot_controller::JointController jointController_;
 };

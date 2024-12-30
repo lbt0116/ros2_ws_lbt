@@ -19,6 +19,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/MujocoMsg.msg"
         "msg/ActuatorCmds.msg"
         "msg/ToUiMsg.msg"
+        "msg/ToSimMsg.msg" 
         DEPENDENCIES std_msgs sensor_msgs geometry_msgs
 )
 if (BUILD_TESTING)

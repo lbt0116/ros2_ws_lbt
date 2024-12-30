@@ -111,7 +111,6 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
     pin_->baseState.rotationMatrix = data.oMi[1].rotation();
     pin_->baseState.quaternion = sensorData->imuQuant;
 
-
     auto normalize_angle = [](double angle) -> double
     {
         while (angle > M_PI) angle -= 2.0 * M_PI;
@@ -197,6 +196,7 @@ PinocchioInterfaceNode::PinocchioInterfaceNode()
         "trigger",
         rclcpp::QoS(rclcpp::KeepLast(1), rmw_qos_profile_sensor_data),
         std::bind(&PinocchioInterfaceNode::trigger_callback, this, std::placeholders::_1));
+    dataCenter.write(impl_->model);
     RCLCPP_INFO(this->get_logger(), "PinocchioInterfaceNode initialized");
 }
 

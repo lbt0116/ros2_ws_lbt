@@ -4,6 +4,9 @@ Language: Cpp
 # 基于的编码规范: none, LLVM, Google, Chromium, Mozilla, WebKit, Microsoft, GNU
 BasedOnStyle: Google
 
+# 禁用数组和结构体初始化的对齐
+AlignOperands: true
+
 # 访问说明符(public、private等)的偏移
 AccessModifierOffset: -4
 

@@ -1,4 +1,4 @@
-#include "robot_software/robot_controller/JointController.h"
+#include "robot_software/robot_controller/basic_controller/JointController.h"
 
 #include "robot_software/robot_utils/UtilFunc.h"
 
@@ -22,14 +22,14 @@ void JointController::run()
 
     mat34 tau = kp.cwiseProduct(q_des - q) + kd.cwiseProduct(dq_des - dq);
 
-    composeLegForce();
-    computeJointTorque();
+    compose_leg_force();
+    compute_joint_torque();
 
     // std::cout << "tau: " << jointController_.tau << std::endl;
     // std::cout << "joint pd tau: " << tau << std::endl;
     // std::cout << "composedLegForce: " << jointController_.composedLegForce << std::endl;
 }
-void JointController::composeLegForce()
+void JointController::compose_leg_force()
 {
     auto f_st = dataCenter_.read<robot_controller::BallanceController>()->f;
     auto f_sw = dataCenter_.read<robot_controller::SwingLegController>()->f;
@@ -46,7 +46,7 @@ void JointController::composeLegForce()
         }
 }
 
-void JointController::computeJointTorque()
+void JointController::compute_joint_torque()
 {
     auto jacobian = dataCenter_.read<robot_state::LegState>()->legJacobian;
     Eigen::VectorXd t = Eigen::Matrix<double, 18, 1>::Zero();

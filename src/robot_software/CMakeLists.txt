@@ -30,6 +30,9 @@ find_package(std_msgs REQUIRED)
 find_package(pinocchio REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(TBB REQUIRED)
+find_package(aligator REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
+find_package(rosbag2_storage REQUIRED)
 # find_package(Eigen3 3.4 REQUIRED NO_MOUDLE)
 
 file(GLOB_RECURSE source
@@ -75,6 +78,9 @@ ament_target_dependencies(main_app
 target_link_libraries(main_app
         pinocchio::pinocchio
         TBB::tbb
+        aligator::aligator
+        rosbag2_cpp::rosbag2_cpp
+        rosbag2_storage::rosbag2_storage
         # ungar::ungar
         )
 

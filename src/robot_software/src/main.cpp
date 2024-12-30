@@ -14,12 +14,13 @@
 
 #include "robot_software/robot_FSM/RobotFSMNode.h"
 #include "robot_software/robot_controller/RobotControllerNode.h"
+#include "robot_software/robot_controller/nmpc_controller/NmpcDdpCtrlNode.h"
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
 #include "robot_software/robot_interface/MujocoInterfaceNode.h"
 #include "robot_software/robot_interface/PinocchioInterfaceNode.h"
+#include "robot_software/robot_interface/RobotRecordNode.h"
 #include "robot_software/robot_interface/UserInterfaceNode.h"
 #include "robot_software/robot_planning/RobotPlanningNode.h"
-
 int main(int argc, char* argv[])
 {
     // 设置环境变量启用颜色输出
@@ -41,7 +42,7 @@ int main(int argc, char* argv[])
     const auto RobotPlanningNode = std::make_shared<Galileo::RobotPlanningNode>();
     const auto RobotControllerNode = std::make_shared<Galileo::RobotControllerNode>();
     const auto UserInterfaceNode = std::make_shared<Galileo::UserInterfaceNode>();
-
+    const auto RobotRecordNode = std::make_shared<Galileo::RobotRecordNode>();
     // 添加节点到执行器
     main_executor.add_node(RobotInterfaceNode);
     main_executor.add_node(PinocchioInterfaceNode);
@@ -52,6 +53,7 @@ int main(int argc, char* argv[])
 
     // 添加用户交互节点到多线程执行器
     user_executor.add_node(UserInterfaceNode);
+    user_executor.add_node(RobotRecordNode);
 
     // 创建一个线程来运行用户交互执行器
     std::thread user_thread([&]() { user_executor.spin(); });

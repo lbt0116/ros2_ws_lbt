@@ -21,8 +21,8 @@
 #include "array_safety.h"
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "custom_msgs/msg/mujoco_msg.hpp"
+#include "custom_msgs/msg/to_sim_msg.hpp"
 #include "simulate.h"
-
 using namespace rclcpp;
 
 using namespace std::chrono_literals;
@@ -66,6 +66,8 @@ private:
 
     void drop_old_message();
 
+    void sim_msg_callback(const custom_msgs::msg::ToSimMsg::SharedPtr msg);
+
     mj::Simulate* sim_;
     std::string name_prefix, model_param_name;
     std::vector<rclcpp::TimerBase::SharedPtr> timers_;
@@ -75,13 +77,12 @@ private:
     // rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_publisher_;
 
     rclcpp::Subscription<custom_msgs::msg::ActuatorCmds>::SharedPtr actuator_cmd_subscription_;
+    rclcpp::Subscription<custom_msgs::msg::ToSimMsg>::SharedPtr sim_msg_subscription_;
     // rclcpp::Service<communication::srv::SimulationReset>::SharedPtr reset_service_;
 
     std::shared_ptr<rclcpp::ParameterEventHandler> param_subscriber_;
 
     std::shared_ptr<rclcpp::ParameterCallbackHandle> cb_handle_;
-
-    std::shared_ptr<ActuatorCmds> actuator_cmds_ptr_;
 
     std::thread spin_thread;
 };

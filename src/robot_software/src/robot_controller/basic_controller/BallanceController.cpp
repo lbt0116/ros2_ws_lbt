@@ -1,4 +1,4 @@
-#include "robot_software/robot_controller/BallanceController.h"
+#include "robot_software/robot_controller/basic_controller/BallanceController.h"
 
 #include "robot_software/robot_utils/UtilFunc.h"
 #include "sophus/so3.hpp"

@@ -2,9 +2,9 @@
 
 #include "custom_msgs/msg/actuator_cmds.hpp"
 #include "rclcpp/rclcpp.hpp"
-#include "robot_software/robot_controller/BallanceController.h"
-#include "robot_software/robot_controller/JointController.h"
-#include "robot_software/robot_controller/SwingLegController.h"
+#include "robot_software/robot_controller/basic_controller/BallanceController.h"
+#include "robot_software/robot_controller/basic_controller/JointController.h"
+#include "robot_software/robot_controller/basic_controller/SwingLegController.h"
 #include "robot_software/robot_utils/DataCenter.hpp"
 #include "std_msgs/msg/bool.hpp"
 

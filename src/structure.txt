@@ -1,0 +1,180 @@
+[01;34m.[0m
+├── [01;34mcustom_msgs[0m
+│   ├── CMakeLists.txt
+│   ├── [01;34mmsg[0m
+│   │   ├── ActuatorCmds.msg
+│   │   ├── MujocoMsg.msg
+│   │   ├── ToSimMsg.msg
+│   │   └── ToUiMsg.msg
+│   └── package.xml
+├── [01;34mkeyboard_control[0m
+│   ├── CMakeLists.txt
+│   ├── [01;34minclude[0m
+│   │   └── [01;34mkeyboard_control[0m
+│   ├── package.xml
+│   └── [01;34msrc[0m
+│       └── keyboard_publisher.cpp
+├── [01;34mmujoco_node[0m
+│   ├── [01;34mcmake[0m
+│   │   ├── CheckAvxSupport.cmake
+│   │   ├── FindOrFetch.cmake
+│   │   ├── MujocoHarden.cmake
+│   │   ├── MujocoLinkOptions.cmake
+│   │   ├── MujocoMacOS.cmake
+│   │   ├── SimulateDependencies.cmake
+│   │   └── SimulateOptions.cmake
+│   ├── CMakeLists.txt
+│   ├── [01;34minclude[0m
+│   │   └── [01;34mmujoco_node[0m
+│   │       ├── array_safety.h
+│   │       ├── glfw_adapter.h
+│   │       ├── glfw_corevideo.h
+│   │       ├── glfw_dispatch.h
+│   │       ├── lodepng.h
+│   │       ├── MujocoMsgHandler.h
+│   │       ├── mujoco_node.h
+│   │       ├── platform_ui_adapter.h
+│   │       └── simulate.h
+│   ├── [01;34mmodels[0m
+│   │   ├── pendulum.xml
+│   │   └── [01;34mquadruped[0m
+│   │       ├── CMakeLists.txt
+│   │       ├── [01;34mconfig[0m
+│   │       │   └── joint_names_quadruped.yaml
+│   │       ├── export.log
+│   │       ├── [01;34mlaunch[0m
+│   │       │   ├── display.launch
+│   │       │   └── gazebo.launch
+│   │       ├── [01;34mmeshes[0m
+│   │       │   ├── Abd1Link.STL
+│   │       │   ├── Abd2Link.STL
+│   │       │   ├── Abd3Link.STL
+│   │       │   ├── Abd4Link.STL
+│   │       │   ├── base_link.STL
+│   │       │   ├── Hip1Link.STL
+│   │       │   ├── Hip2Link.STL
+│   │       │   ├── Hip3Link.STL
+│   │       │   ├── Hip4Link.STL
+│   │       │   ├── Knee1Link.STL
+│   │       │   ├── Knee2Link.STL
+│   │       │   ├── Knee3Link.STL
+│   │       │   ├── Knee4Link.STL
+│   │       │   ├── toe1Link.STL
+│   │       │   ├── toe2Link.STL
+│   │       │   ├── toe3Link.STL
+│   │       │   └── toe4Link.STL
+│   │       ├── package.xml
+│   │       ├── [01;34mtextures[0m
+│   │       └── [01;34murdf[0m
+│   │           ├── quadruped.csv
+│   │           ├── quadruped_foxglove.urdf
+│   │           ├── quadruped.urdf
+│   │           └── quadruped.xml
+│   ├── package.xml
+│   └── [01;34msrc[0m
+│       ├── glfw_adapter.cc
+│       ├── glfw_corevideo.mm
+│       ├── glfw_dispatch.cc
+│       ├── hello.xml
+│       ├── lodepng.cpp
+│       ├── macos_gui.mm
+│       ├── MujocoMsgHandler.cpp
+│       ├── mujoco_node.cpp
+│       ├── platform_ui_adapter.cc
+│       ├── README.md
+│       └── simulate.cc
+├── [01;34mrobot_software[0m
+│   ├── CMakeLists.txt
+│   ├── [01;34minclude[0m
+│   │   └── [01;34mrobot_software[0m
+│   │       ├── [01;34mrobot_controller[0m
+│   │       │   ├── [01;34mbasic_controller[0m
+│   │       │   │   ├── BallanceController.h
+│   │       │   │   ├── JointController.h
+│   │       │   │   └── SwingLegController.h
+│   │       │   ├── [01;34mnmpc_controller[0m
+│   │       │   │   ├── NmpcDdpCtrlNode.h
+│   │       │   │   └── NonlinearMPC_SQP.h
+│   │       │   └── RobotControllerNode.h
+│   │       ├── [01;34mrobot_dynamics[0m
+│   │       ├── [01;34mrobot_estimator[0m
+│   │       │   ├── EskfOnSe3.h
+│   │       │   ├── LinearKalmanFilter.h
+│   │       │   └── RobotEstimatorNode.h
+│   │       ├── [01;34mrobot_FSM[0m
+│   │       │   ├── FiniteStateMachine.h
+│   │       │   └── RobotFSMNode.h
+│   │       ├── [01;34mrobot_interface[0m
+│   │       │   ├── HardwareInterfaceNode.h
+│   │       │   ├── MujocoInterfaceNode.h
+│   │       │   ├── PinocchioInterfaceNode.h
+│   │       │   ├── RobotRecordNode.h
+│   │       │   └── UserInterfaceNode.h
+│   │       ├── [01;34mrobot_kinematics[0m
+│   │       ├── [01;34mrobot_planning[0m
+│   │       │   ├── RobotBasePlanner.h
+│   │       │   ├── RobotJointPlanner.h
+│   │       │   ├── RobotLegPlanner.h
+│   │       │   └── RobotPlanningNode.h
+│   │       ├── [01;34mrobot_utils[0m
+│   │       │   ├── [01;34mcommunication[0m
+│   │       │   │   ├── JoystickCmdHandler.hpp
+│   │       │   │   ├── KeyboardCmdHandler.hpp
+│   │       │   │   └── UserDataHandler.hpp
+│   │       │   ├── DataCenter.hpp
+│   │       │   ├── DataTypes.hpp
+│   │       │   ├── GaitSchedule.hpp
+│   │       │   ├── MatrixTypes.h
+│   │       │   ├── QuinticSpline.hpp
+│   │       │   └── UtilFunc.h
+│   │       └── [01;34mthird_party[0m
+│   │           └── [01;34mquadprog[0m
+│   │               ├── aind.c
+│   │               ├── daxpy.c
+│   │               ├── ddot.c
+│   │               ├── dpofa.c
+│   │               ├── dscal.c
+│   │               ├── eigen_quadprog_api.h
+│   │               ├── f2c.h
+│   │               ├── f2c_lite.c
+│   │               ├── QuadProg.cpp
+│   │               ├── QuadProg.h
+│   │               ├── solve.QP.c
+│   │               ├── solve.QP.compact.c
+│   │               └── util.c
+│   ├── package.xml
+│   └── [01;34msrc[0m
+│       ├── main.cpp
+│       ├── [01;34mrobot_controller[0m
+│       │   ├── [01;34mbasic_controller[0m
+│       │   │   ├── BallanceController.cpp
+│       │   │   ├── JointController.cpp
+│       │   │   └── SwingLegController.cpp
+│       │   ├── [01;34mnmpc_controller[0m
+│       │   │   ├── NmpcDdpCtrlNode.cpp
+│       │   │   └── NonlinearMPC_SQP.cpp
+│       │   └── RobotControllerNode.cpp
+│       ├── [01;34mrobot_dynamics[0m
+│       ├── [01;34mrobot_estimator[0m
+│       │   ├── EskfOnSe3.cpp
+│       │   ├── LinearKalmanFilter.cpp
+│       │   └── RobotEstimatorNode.cpp
+│       ├── [01;34mrobot_FSM[0m
+│       │   ├── FiniteStateMachine.cpp
+│       │   └── RobotFSMNode.cpp
+│       ├── [01;34mrobot_interface[0m
+│       │   ├── HardwareInterfaceNode.cpp
+│       │   ├── MujocoInterfaceNode.cpp
+│       │   ├── PinocchioInterfaceNode.cpp
+│       │   ├── RobotRecordNode.cpp
+│       │   └── UserInterfaceNode.cpp
+│       ├── [01;34mrobot_kinematics[0m
+│       ├── [01;34mrobot_planning[0m
+│       │   ├── RobotBasePlanner.cpp
+│       │   ├── RobotJointPlanner.cpp
+│       │   ├── RobotLegPlanner.cpp
+│       │   └── RobotPlanningNode.cpp
+│       └── [01;34mrobot_utils[0m
+└── structure.txt
+
+45 directories, 132 files

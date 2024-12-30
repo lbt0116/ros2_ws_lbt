@@ -1,4 +1,4 @@
-#include "robot_software/robot_controller/SwingLegController.h"
+#include "robot_software/robot_controller/basic_controller/SwingLegController.h"
 
 #include "robot_software/robot_utils/UtilFunc.h"
 namespace Galileo

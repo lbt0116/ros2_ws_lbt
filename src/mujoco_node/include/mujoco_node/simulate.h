@@ -320,8 +320,11 @@ public:
     int hfield_upload_ = -1;
 
     // step mode
-    bool single_step_mode = false;
+    bool single_step_mode = true;
     bool single_step_flag = false;
+
+    // simulation start flag
+    bool simulation_start = false;
 };
 }  // namespace mujoco
 

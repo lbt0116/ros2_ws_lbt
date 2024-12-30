@@ -60,4 +60,5 @@ void RobotControllerNode::on_parameter_event(const rcl_interfaces::msg::Paramete
     swingLegController_->set_parameters(event);
     jointController_->set_parameters(event);
 }
+
 }  // namespace Galileo

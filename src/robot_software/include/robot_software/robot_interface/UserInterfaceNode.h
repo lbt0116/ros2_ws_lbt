@@ -3,6 +3,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/string.hpp>
 
+#include "custom_msgs/msg/to_sim_msg.hpp"
 #include "custom_msgs/msg/to_ui_msg.hpp"
 #include "robot_software/robot_utils/communication/KeyboardCmdHandler.hpp"
 #include "robot_software/robot_utils/communication/UserDataHandler.hpp"
@@ -29,7 +30,13 @@ private:
     rclcpp::Publisher<custom_msgs::msg::ToUiMsg>::SharedPtr userDataPub_;
     // 用户交互数据更新定时器
     rclcpp::TimerBase::SharedPtr userDataTimer_;
+    // 仿真开始发布
+    rclcpp::Publisher<custom_msgs::msg::ToSimMsg>::SharedPtr simulationPub_;
+    // 仿真开始定时器
+    rclcpp::TimerBase::SharedPtr simulationTimer_;
     // 用户交互数据更新回调
     void userDataCallback();
+    // 仿真开始回调
+    void simulationCallback();
 };
 }  // namespace Galileo

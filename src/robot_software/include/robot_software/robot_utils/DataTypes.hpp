@@ -2,8 +2,8 @@
 #include <Eigen/Dense>
 #include <array>
 
+#include "pinocchio/multibody/model.hpp"
 #include "robot_software/robot_utils/MatrixTypes.h"
-
 namespace Galileo
 {
 
@@ -17,6 +17,7 @@ struct robot_constants
     double yOffset = 0.08;
     mat33 inertiaMatrix;
     mat66 spatialInertiaMatrix;
+    vec3 gravity = {0, 0, -9.81};
 };
 
 // 机器人状态相关数据结构
@@ -58,7 +59,7 @@ struct BaseState
     vec3 positionRelative;  // 相对于基座的位置
     vec3 eulerAngles;       // 欧拉角
     mat33 rotationMatrix;   // 旋转矩阵
-    vec4 quaternion;        // 四元数
+    vec4 quaternion;        // 四元数 (x,y,z,w)
     vec3 linearVelocity;    // 线速度
     vec3 angularVelocity;   // 角速度
 
@@ -70,6 +71,10 @@ struct ContactState
     vec4i isContact;
     mat34 contactForce;
 };
+
+// using ModelPtr = std::shared_ptr<pinocchio::Model>;
+// std::shared_ptr<pinocchio::Model> modelPtr;
+
 }  // namespace robot_state
 
 namespace robot_FSM
