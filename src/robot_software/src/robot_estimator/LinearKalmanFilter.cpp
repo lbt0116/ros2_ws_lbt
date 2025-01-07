@@ -33,6 +33,16 @@ LinearKalmanFilter::LinearKalmanFilter()
 
     // 初始化状态转移矩阵
     updateStateTransitionMatrix();
+
+    Q_ = 0.0001 * Q_.setIdentity(9, 9);
+
+    Q_.block(0, 0, 3, 3) = (0.001 / 20) * Q_.block(0, 0, 3, 3).setIdentity();        // 位置噪声
+    Q_.block(6, 6, 3, 3) = (0.001 / 20 * 9.8) * Q_.block(3, 3, 3, 3).setIdentity();  // 速度噪声
+
+    R_.setIdentity(6, 6);  // 观测值噪声矩阵
+    R_ = 2.5 * R_.setIdentity(6, 6);
+    R_(5, 5) = 0.1;
+    R_.block(0, 0, 3, 3) = 0.001 * Eigen::Matrix3d::Identity();
 }
 
 void LinearKalmanFilter::updateStateTransitionMatrix()
@@ -52,10 +62,10 @@ void LinearKalmanFilter::predict(const Eigen::Vector3d& acc, const Eigen::Matrix
     Eigen::Vector3d euler = x_.segment<3>(3);
 
     // 更新状态
-    Eigen::Vector3d pos_update = x_.segment<3>(6) * DT + 0.5 * (R * acc + gravity_) * DT * DT;
+    Eigen::Vector3d pos_update = x_.segment<3>(6) * DT + 0.5 * (acc + gravity_) * DT * DT;
     x_.segment<3>(0) += pos_update;
 
-    Eigen::Vector3d vel_update = (R * acc + gravity_) * DT;
+    Eigen::Vector3d vel_update = (acc + gravity_) * DT;
     x_.segment<3>(6) += vel_update;
 
     // 更新协方差
@@ -91,11 +101,11 @@ void LinearKalmanFilter::run()
     auto legPosInWorld = dataCenter_.read<robot_state::LegState>()->legPosHipInWorld;
 
     // 使用DataCenter中的数据
-    Eigen::Vector3d acc = baseState->acceleration;
+    Eigen::Vector3d acc = baseState->acceleration;  // world frame
     Eigen::Vector3d angle = baseState->eulerAngles;
     Eigen::Matrix3d Rot = baseState->rotationMatrix;
-    Eigen::Vector3d velocity = -legVeloInWorld * phase.cast<double>() / phase.sum();
-    
+    Eigen::Vector3d velocity = -legVeloInWorld * phase.cast<double>() / phase.sum();  // world frame
+
     if (phase.sum() == 0) velocity = Eigen::Vector3d::Zero();
 
     predict(acc, Rot);

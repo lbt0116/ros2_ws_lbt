@@ -14,19 +14,36 @@ SwingLegController::~SwingLegController()
 
 void SwingLegController::run()
 {
-    auto p = dataCenter_.read<robot_state::LegState>()->legPosHipInWorld;
-    auto v = dataCenter_.read<robot_state::LegState>()->legVeloInWorld;
+    auto p = dataCenter_.read<robot_state::LegState>()->legPosHipInWorld;  // with yaw
+    auto v = dataCenter_.read<robot_state::LegState>()->legVeloInWorld;    // with yaw
 
-    auto p_des = dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegPosition;
-    auto v_des = dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegVelocity;
+    auto p_des = dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegPosition;  // w/o yaw
+    auto v_des = dataCenter_.read<robot_target_trajectory::TargetLegTrajectory>()->targetLegVelocity;  // w/o yaw
+    auto Rz = Eigen::AngleAxisd(dataCenter_.read<robot_state::BaseState>()->eulerAngles(2), Eigen::Vector3d::UnitZ())
+                  .toRotationMatrix();
 
-    mat34 f = kp.cwiseProduct(p_des - p) + kd.cwiseProduct(v_des - v);
+    auto R = dataCenter_.read<robot_state::BaseState>()->rotationMatrix;
+    // p_des << 0.1, 0.0, 0, 0, 0.2, 0, 0, 0, -0.5, -0.5, -0.5, -0.5;
+
+    mat34 f = kp.cwiseProduct(Rz * p_des - p) + kd.cwiseProduct(Rz * v_des - v);  // cuole?
+    // mat34 f = kp.cwiseProduct(p_des - p) + kd.cwiseProduct(v_des - v);  // cuole?
     robot_controller::SwingLegController sw;
-    sw.f = f;
+    // f.row(0).setConstant(0);
+    // f.row(1).setConstant(10);
+    // f.row(2).setConstant(0);
+    sw.f =  f;
     dataCenter_.write(sw);
-
-    // std::cout<<"p      "<<p<<std::endl;
-    // std::cout<<"p_des  "<<p_des<<std::endl;
+    // std::cout << "p: " << p << std::endl;
+    // std::cout << "p_des: " << p_des << std::endl;
+    // std::cout << "Rz.transpose() * v: " << Rz.transpose() * v << std::endl;
+    // std::cout << "v: " << v << std::endl;
+    // std::cout << "v_des: " << v_des << std::endl;
+    // std::cout << "f: " << f << std::endl;
+    // std::cout << "swf: " << sw.f << std::endl;
+    // std::cout << "Rz: " << Rz << std::endl;
+    // std::cout << "yaw: " << dataCenter_.read<robot_state::BaseState>()->eulerAngles(2) << std::endl;
+    // std::cout << "kp: " << kp.cwiseProduct(p_des - p) << std::endl;
+    // std::cout << "kd: " << kd.cwiseProduct(v_des - Rz.transpose() * v) << std::endl;
 }
 
 void SwingLegController::declare_and_get_parameters(rclcpp::Node* node)

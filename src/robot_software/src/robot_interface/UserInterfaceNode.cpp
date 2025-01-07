@@ -13,9 +13,9 @@ UserInterfaceNode::UserInterfaceNode()
     userDataPub_ = this->create_publisher<custom_msgs::msg::ToUiMsg>("user_data_output", 10);
     simulationPub_ = this->create_publisher<custom_msgs::msg::ToSimMsg>("simulation", 1);
     userDataTimer_ =
-        this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&UserInterfaceNode::userDataCallback, this));
+        this->create_wall_timer(std::chrono::milliseconds(1), std::bind(&UserInterfaceNode::user_data_callback, this));
     simulationTimer_ = this->create_wall_timer(std::chrono::milliseconds(1000),
-                                               std::bind(&UserInterfaceNode::simulationCallback, this));
+                                               std::bind(&UserInterfaceNode::simulation_callback, this));
 }
 
 void Galileo::UserInterfaceNode::keyboard_callback(const std_msgs::msg::String::ConstSharedPtr& msg)
@@ -24,7 +24,7 @@ void Galileo::UserInterfaceNode::keyboard_callback(const std_msgs::msg::String::
     keyboardCmdHandler_->keyboard_callback(msg);
 }
 
-void Galileo::UserInterfaceNode::userDataCallback()
+void Galileo::UserInterfaceNode::user_data_callback()
 {
     // 更新用户交互数据
     custom_msgs::msg::ToUiMsg msg = userDataHandler_->updateUserData();
@@ -32,7 +32,7 @@ void Galileo::UserInterfaceNode::userDataCallback()
 }
 }  // namespace Galileo
 
-void Galileo::UserInterfaceNode::simulationCallback()
+void Galileo::UserInterfaceNode::simulation_callback()
 {
     custom_msgs::msg::ToSimMsg msg;
     msg.start_simulation = true;

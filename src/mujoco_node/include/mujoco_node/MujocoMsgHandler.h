@@ -56,7 +56,7 @@ private:
 
     void imu_callback();
 
-    void contact_callback();
+    void mujoco_msg_callback();
 
     void joint_callback();
 

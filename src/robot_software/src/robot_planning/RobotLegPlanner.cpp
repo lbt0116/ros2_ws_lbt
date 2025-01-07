@@ -7,7 +7,7 @@ RobotLegPlanner::RobotLegPlanner()
     : dataCenter(DataCenter::getInstance())
 {
     state.initToeLocation << 0, 0, 0, 0, 0, 0, 0, 0, -0.5, -0.5, -0.5, -0.5;
-    legTrajectory.targetLegPosition << 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5;
+    // legTrajectory.targetLegPosition << 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5, 0, 0, -0.5;
 }
 
 RobotLegPlanner::~RobotLegPlanner()
@@ -134,6 +134,9 @@ void RobotLegPlanner::raibert_foot_location(const vec3 &v, const vec3 &vd, doubl
         // Y方向
         double yOff = (i < 2) ? -yOffset : yOffset;
         legTrajectory.targetToeLocation(1, i) = 0.5 * v(1) * T + kv * (v(1) - vd(1)) + yOff;
+
+        // Z方向
+        legTrajectory.targetToeLocation(2, i) = 0;
     }
 
     legTrajectory.targetToeLocation += turn;

@@ -40,15 +40,17 @@ MujocoInterfaceNode::MujocoInterfaceNode()
 void MujocoInterfaceNode::sub_mujoco_callback(const custom_msgs::msg::MujocoMsg::SharedPtr msg)
 {
     robot_state::ContactState contactState;
+    robot_state::BaseState baseState;
     contactState.isContact << msg->contact_state[0], msg->contact_state[1], msg->contact_state[2],
         msg->contact_state[3];
 
     contactState.contactForce = stdVectorToEigen<Eigen::Matrix<double, 3, 4>>(msg->ground_reaction_force);
-
+    baseState.p_real << msg->p_real[0], msg->p_real[1], msg->p_real[2];
+    baseState.v_real << msg->v_real[0], msg->v_real[1], msg->v_real[2];
     // std::cout << contactState.contactForce << std::endl;
 
     dataCenter.write(contactState);
-
+    dataCenter.write(baseState);
     // RCLCPP_INFO(this->get_logger(),
     //             "pub contact %.1d %.1d %.1d %.1d",
     //             contactState.isContact(0),
@@ -61,9 +63,8 @@ void MujocoInterfaceNode::sub_sensor_callback(const sensor_msgs::msg::Imu::Const
                                               const sensor_msgs::msg::JointState::ConstSharedPtr& joint_state_msg) const
 {
     robot_state::SensorData sensorData;
-    imu_msg->orientation;
-    sensorData.imuQuant << imu_msg->orientation.x, imu_msg->orientation.y, imu_msg->orientation.z,
-        imu_msg->orientation.w;
+    sensorData.imuQuant = Eigen::Quaterniond(
+        imu_msg->orientation.w, imu_msg->orientation.x, imu_msg->orientation.y, imu_msg->orientation.z);
 
     sensorData.imuAcc << imu_msg->linear_acceleration.x, imu_msg->linear_acceleration.y, imu_msg->linear_acceleration.z;
 

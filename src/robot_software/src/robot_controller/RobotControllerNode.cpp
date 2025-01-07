@@ -38,7 +38,6 @@ void RobotControllerNode::trigger_callback(const std_msgs::msg::Bool::ConstShare
     ballanceController_->run();
     swingLegController_->run();
     jointController_->run();
-
     auto msg1 = jointController_->publishActuatorCmds();
 
     publisher_->publish(msg1);

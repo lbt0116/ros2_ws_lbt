@@ -29,6 +29,9 @@ private:
     void compose_leg_force();
     void compute_joint_torque();
 
+    void setJacobian();
+    Eigen::Matrix<double, 3, 3> Jacobian[4];
+    Eigen::Matrix<double, 3, 3> dJacobian[4];
     robot_controller::JointController jointController_;
 };
 }  // namespace Galileo

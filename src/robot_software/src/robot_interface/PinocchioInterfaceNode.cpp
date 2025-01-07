@@ -3,6 +3,9 @@
 //
 #include "robot_software/robot_interface/PinocchioInterfaceNode.h"
 
+#include <tf2/LinearMath/Matrix3x3.h>
+#include <tf2/LinearMath/Quaternion.h>
+
 #include <pinocchio/algorithm/joint-configuration.hpp>
 #include <pinocchio/fwd.hpp>
 
@@ -16,7 +19,6 @@
 #include "pinocchio/algorithm/rnea.hpp"
 #include "pinocchio/parsers/urdf.hpp"
 #include "robot_software/robot_utils/UtilFunc.h"
-
 using namespace Eigen;
 // using namespace pinocchio;
 namespace pin = pinocchio;
@@ -59,12 +61,30 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
 {
     auto sensorData = pin_->dataCenter.read<robot_state::SensorData>();  // read
                                                                          // 返回的是一个智能指针
+
+    pin_->baseState = *pin_->dataCenter.read<robot_state::BaseState>();
     // pinocchio 四元数 xyzw
+    // tf2 四元数 xyzw
     // Eigen wxyz
     // mujoco wxyz
+    tf2::Quaternion quat(
+        sensorData->imuQuant.x(), sensorData->imuQuant.y(), sensorData->imuQuant.z(), sensorData->imuQuant.w());
+    // 将四元数转换为欧拉角 (Roll, Pitch, Yaw)
+    Eigen::Vector3d eulerAngles;
+    tf2::Matrix3x3(quat).getRPY(eulerAngles(0), eulerAngles(1), eulerAngles(2));
+
+    quat.setRPY(eulerAngles(0), eulerAngles(1), 0);
 
     q.block(0, 0, 3, 1).setZero();
-    q.block(3, 0, 4, 1) = sensorData->imuQuant;
+    // q(3) = quat.x();
+    // q(4) = quat.y();
+    // q(5) = quat.z();
+    // q(6) = quat.w();
+
+    q(3) = sensorData->imuQuant.x();
+    q(4) = sensorData->imuQuant.y();
+    q(5) = sensorData->imuQuant.z();
+    q(6) = sensorData->imuQuant.w();
     for (int i = 0; i < 4; i++)
     {
         q.block(7 + 3 * i, 0, 3, 1) = sensorData->jointPosition.col(i);
@@ -92,12 +112,11 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
     pin::centerOfMass(model, data, q);          // 计算质心位置
     pin::computeCentroidalMap(model, data, q);  // 计算质心动力学映射
 
+    pin::updateFramePlacements(model, data);
     pin::getFrameJacobian(model, data, 12, pinocchio::LOCAL_WORLD_ALIGNED, Jacobian[0]);
     pin::getFrameJacobian(model, data, 20, pinocchio::LOCAL_WORLD_ALIGNED, Jacobian[1]);
     pin::getFrameJacobian(model, data, 28, pinocchio::LOCAL_WORLD_ALIGNED, Jacobian[2]);
     pin::getFrameJacobian(model, data, 36, pinocchio::LOCAL_WORLD_ALIGNED, Jacobian[3]);
-
-    pin::updateFramePlacements(model, data);
 
     pin_->robotConstants.mass = data.mass[0];
     pin_->robotConstants.inertiaMatrix = model.inertias[0].inertia().matrix();
@@ -108,23 +127,14 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
     pin_->jointState.jointVelocity = sensorData->jointVelocity;
     pin_->jointState.jointTorque = sensorData->jointTorque;
 
-    pin_->baseState.rotationMatrix = data.oMi[1].rotation();
     pin_->baseState.quaternion = sensorData->imuQuant;
+    pin_->baseState.rotationMatrix = sensorData->imuQuant.toRotationMatrix();
+    // pin_->baseState.rotationMatrix = data.oMf[model.getFrameId("base_link")].rotation();
 
-    auto normalize_angle = [](double angle) -> double
-    {
-        while (angle > M_PI) angle -= 2.0 * M_PI;
-        while (angle < -M_PI) angle += 2.0 * M_PI;
-        return angle;
-    };
-    // pin_->baseState.eulerAngles = data.oMi[1].rotation().eulerAngles(0, 1, 2);
-    pin_->baseState.eulerAngles(0) = (data.oMi[1].rotation().eulerAngles(2, 1, 0)[2]);
-    pin_->baseState.eulerAngles(1) = (data.oMi[1].rotation().eulerAngles(2, 1, 0)[1]);
-    // pin_->baseState.eulerAngles(2) = normalize_angle(data.oMi[1].rotation().eulerAngles(0, 1, 2)[2]);
-    pin_->baseState.eulerAngles(2) = data.oMi[1].rotation().eulerAngles(2, 1, 0)[0];
+    pin_->baseState.eulerAngles = eulerAngles;
 
-    pin_->baseState.acceleration = data.oMi[1].rotation() * sensorData->imuAcc;
-    pin_->baseState.angularVelocity = data.oMi[1].rotation() * sensorData->imuAngvelo;
+    pin_->baseState.acceleration = data.oMf[model.getFrameId("base_link")].rotation() * sensorData->imuAcc;
+    pin_->baseState.angularVelocity = data.oMf[model.getFrameId("base_link")].rotation() * sensorData->imuAngvelo;
 
     for (int leg = 0; leg < 4; ++leg)
     {

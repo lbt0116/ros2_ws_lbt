@@ -1,7 +1,10 @@
 #include "robot_software/robot_controller/basic_controller/BallanceController.h"
 
+#include "eigen3/unsupported/Eigen/MatrixFunctions"
 #include "robot_software/robot_utils/UtilFunc.h"
 #include "sophus/so3.hpp"
+#include "tf2/LinearMath/Matrix3x3.h"
+#include "tf2/LinearMath/Quaternion.h"
 #ifndef BALANCE_DEBUG
 #define BALANCE_DEBUG 0  // 设置为1开启调试打印，设置为0关闭调试打印
 #endif
@@ -27,11 +30,20 @@ BallanceController::~BallanceController() = default;
 
 void BallanceController::run()
 {
+    auto Rz = Eigen::AngleAxisd(dataCenter_.read<robot_state::BaseState>()->eulerAngles(2), Eigen::Vector3d::UnitZ())
+                  .toRotationMatrix();
+    auto R = dataCenter_.read<robot_state::BaseState>()->rotationMatrix;
+    Rz.setIdentity();
     // 1. 获取状态
     BALANCE_PRINT("Step 1: 获取当前状态和目标状态");
     const auto state_error = get_state_error();
-    const mat34 leg_pos_world = dataCenter_.read<robot_state::LegState>()->legPosBaseInWorld;
+
+    mat34 leg_pos_world = Rz.transpose() * dataCenter_.read<robot_state::LegState>()->legPosBaseInWorld;
+
+    // leg_pos_world << 0.2, 0.2, -0.2, -0.2, -0.2, -0.2, 0.2, 0.2, -0.5, -0.5, -0.5, -0.5;
+
     const auto leg_phase = dataCenter_.read<robot_FSM::legState>()->legPhase;
+
     BALANCE_PRINT("状态误差: \n" << state_error.transpose());
     BALANCE_PRINT("支撑腿相位: " << leg_phase.transpose());
 
@@ -41,7 +53,8 @@ void BallanceController::run()
 
     // 2. 计算平衡力
     BALANCE_PRINT("\nStep 2: 计算平衡力");
-    const vec6 force = compute_balance_force(state_error);
+    vec6 force = compute_balance_force(state_error);
+    // force << 50, 0, 500, 0, 0, 0;
     BALANCE_PRINT("计算得到的平衡力: \n" << force.transpose());
 
     // 3. 构建QP约束矩阵
@@ -114,12 +127,16 @@ void BallanceController::run()
     {
         if (leg_phase(i))
         {
-            ballance.f.col(i) = -F_ext.segment(k * 3, 3);
+            ballance.f.col(i) = -Rz * F_ext.segment(k * 3, 3);
             k++;
         }
     }
-    std::cout << "F_ext: " << F_ext.transpose() << std::endl;
-    std::cout << "QP_A*F_ext: " << qp_matrices.A * F_ext << std::endl;
+    std::cout << "wrench: \n" << (qp_matrices.A * F_ext).transpose() << std::endl;
+    std::cout << "pd: \n" << force.transpose() << std::endl;
+    std::cout << "f: \n" << ballance.f << std::endl;
+    std::cout << "F_ext: \n" << F_ext << std::endl;
+    std::cout << "A: \n" << leg_pos_world << std::endl;
+    std::cout << "Rz: \n" << Rz << std::endl;
     dataCenter_.write(ballance);
 }
 
@@ -127,23 +144,68 @@ vec12 BallanceController::get_state_error() const
 {
     vec12 error;
     auto R = dataCenter_.read<robot_state::BaseState>()->rotationMatrix;
-    auto euler_des = dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetEulerAngles;
-
+    mat33 Rz = Eigen::AngleAxisd(dataCenter_.read<robot_state::BaseState>()->eulerAngles(2), Eigen::Vector3d::UnitZ())
+                   .toRotationMatrix();
     // 将期望欧拉角转换为旋转矩阵
-    Eigen::Matrix3d R_des_mat;
-    R_des_mat = Eigen::AngleAxisd(euler_des(2), Eigen::Vector3d::UnitZ()).toRotationMatrix()
-                * Eigen::AngleAxisd(euler_des(1), Eigen::Vector3d::UnitY()).toRotationMatrix()
-                * Eigen::AngleAxisd(euler_des(0), Eigen::Vector3d::UnitX()).toRotationMatrix();
+    mat33 R_des_mat;
+    R_des_mat = dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetQuaternion.toRotationMatrix();
+
+    // tf2::Matrix3x3 R_des_mat_tf(R_des_mat(0, 0),
+    //                             R_des_mat(0, 1),
+    //                             R_des_mat(0, 2),
+    //                             R_des_mat(1, 0),
+    //                             R_des_mat(1, 1),
+    //                             R_des_mat(1, 2),
+    //                             R_des_mat(2, 0),
+    //                             R_des_mat(2, 1),
+    //                             R_des_mat(2, 2));
+
+    // tf2::Matrix3x3 R_mat_tf(R(0, 0), R(0, 1), R(0, 2), R(1, 0), R(1, 1), R(1, 2), R(2, 0), R(2, 1), R(2, 2));
+
+    // vec3 euler_angles_des;
+    // R_des_mat_tf.getRPY(euler_angles_des(0), euler_angles_des(1), euler_angles_des(2));
+    // vec3 euler_angles;
+    // R_mat_tf.getRPY(euler_angles(0), euler_angles(1), euler_angles(2));
 
     // 计算旋转矩阵差值的向量化表示
-    Eigen::Vector3d rotation_error = Sophus::SO3d::vee(R.transpose() * R_des_mat);
-    error.segment(0, 3) = dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetPosition
-                          - dataCenter_.read<robot_state::BaseState>()->position;
+    Eigen::Vector3d rotation_error = Sophus::SO3d::vee((R.transpose() * R_des_mat).log());
+    // rotation_error = euler_angles_des - euler_angles;
+    Rz.setIdentity();
+    error.segment(0, 3) = (dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetPosition
+                           - Rz.transpose() * dataCenter_.read<robot_state::BaseState>()->p_real);
     error.segment(3, 3) = rotation_error;
-    error.segment(6, 3) = dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetLinearVelocity
-                          - dataCenter_.read<robot_state::BaseState>()->linearVelocity;
-    error.segment(9, 3) = dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetAngularVelocity
-                          - dataCenter_.read<robot_state::BaseState>()->angularVelocity;
+    error.segment(6, 3) = (dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetLinearVelocity
+                           - Rz.transpose() * dataCenter_.read<robot_state::BaseState>()->v_real);
+    error.segment(9, 3) = (dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetAngularVelocity
+                           - Rz.transpose() * dataCenter_.read<robot_state::BaseState>()->angularVelocity);
+
+    std::cout << "当前状态:" << std::endl;
+    std::cout << "当前位置: " << (Rz.transpose() * dataCenter_.read<robot_state::BaseState>()->p_real).transpose()
+              << std::endl;
+    std::cout << "期望位置: "
+              << dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetPosition.transpose()
+              << std::endl;
+    std::cout << "当前姿态: " << dataCenter_.read<robot_state::BaseState>()->eulerAngles.transpose() << std::endl;
+    std::cout << "期望姿态: "
+              << dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()
+                     ->targetQuaternion.toRotationMatrix()
+                     .eulerAngles(0, 1, 2)
+                     .transpose()
+              << std::endl;
+    std::cout << "当前线速度: " << (Rz.transpose() * dataCenter_.read<robot_state::BaseState>()->v_real).transpose()
+              << std::endl;
+    std::cout << "期望线速度: "
+              << dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetLinearVelocity.transpose()
+              << std::endl;
+    std::cout << "当前角速度: "
+              << (Rz.transpose() * dataCenter_.read<robot_state::BaseState>()->angularVelocity).transpose()
+              << std::endl;
+    std::cout << "期望角速度: "
+              << dataCenter_.read<robot_target_trajectory::TargetBaseTrajectory>()->targetAngularVelocity.transpose()
+              << std::endl;
+
+    std::cout << "rotation_error: \n" << rotation_error << std::endl;
+
     return error;
 }
 
@@ -151,17 +213,17 @@ vec6 BallanceController::compute_balance_force(const vec12& state_error) const
 {
     vec6 f = kp.cwiseProduct(state_error.head(6)) + kd.cwiseProduct(state_error.tail(6));
     f(2) += dataCenter_.read<robot_constants>()->mass * 9.8;
-    f(0) += 400 * (0.1 - dataCenter_.read<robot_state::BaseState>()->positionRelative(0));
+    f(0) += 400 * (0.0 - dataCenter_.read<robot_state::BaseState>()->positionRelative(0));
     return f;
 }
 
 Eigen::Matrix<double, 6, 3> BallanceController::build_friction_cone_constraints() const
 {
-    constexpr double ux = 0.75;
-    constexpr double uy = 0.75;
+    constexpr double ux = 0.7;
+    constexpr double uy = 0.7;
 
     Eigen::Matrix<double, 6, 3> friction_cone;
-    friction_cone << 0, 0, 1, 0, 0, -1, 1, 0, -ux, 0, 1, -uy, -1, 0, -ux, 0, -1, -uy;
+    friction_cone << 0, 0, 1, 0, 0, -1, 1, 0, -ux * 0.7, 0, 1, -uy * 0.7, -1, 0, -ux * 0.7, 0, -1, -uy * 0.7;
 
     return friction_cone;
 }

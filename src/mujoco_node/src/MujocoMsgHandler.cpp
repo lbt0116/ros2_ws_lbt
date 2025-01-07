@@ -1,9 +1,9 @@
 #include "MujocoMsgHandler.h"
 
+#include <Eigen/Dense>
 #include <algorithm>
 
 #include "sensor_msgs/image_encodings.hpp"
-
 namespace Galileo
 {
 MujocoMsgHandler::MujocoMsgHandler(mj::Simulate* sim)
@@ -74,7 +74,7 @@ void MujocoMsgHandler::publish_mujoco_callback()
             {
                 imu_callback();
                 joint_callback();
-                contact_callback();
+                mujoco_msg_callback();
                 sim_->single_step_flag = false;
             }
             else
@@ -85,7 +85,7 @@ void MujocoMsgHandler::publish_mujoco_callback()
         {
             imu_callback();
             joint_callback();
-            contact_callback();
+            mujoco_msg_callback();
         }
     }
 }
@@ -125,7 +125,7 @@ void MujocoMsgHandler::imu_callback()
     // message.linear_acceleration.z);
 }
 
-void MujocoMsgHandler::contact_callback()
+void MujocoMsgHandler::mujoco_msg_callback()
 {
     auto msg = custom_msgs::msg::MujocoMsg();
     std::vector<std::string> foot_geom_names = {"toe1_contact", "toe2_contact", "toe3_contact", "toe4_contact"};
@@ -182,6 +182,25 @@ void MujocoMsgHandler::contact_callback()
     {
         msg.contact_state[i] = contact_state[i];
     }
+    // 读取躯干位置和速度
+    // 位置: xyz在qpos的前3个元素，四元数在后4个元素
+    // 获取躯干 ID
+    int body_index = mj_name2id(sim_->m_, mjOBJ_BODY, "base_link");
+    // mjtNum real_vel[6];
+    mjtNum* real_vel = sim_->d_->cvel + 6 * body_index;  // w v
+    mjtNum* real_p = sim_->d_->subtree_com;              //
+    mjtNum* force_ptr = sim_->d_->xfrc_applied + 6 * body_index;
+    mjtNum* real_quad = sim_->d_->xquat + body_index * 4;  // w v
+
+    msg.p_real[0] = real_p[0];
+    msg.p_real[1] = real_p[1];
+    msg.p_real[2] = real_p[2];
+
+    msg.v_real[0] = real_vel[3];
+    msg.v_real[1] = real_vel[4];
+    msg.v_real[2] = real_vel[5];
+
+
 
     mujoco_msg_publisher_->publish(msg);
 }

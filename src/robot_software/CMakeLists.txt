@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 
 
 project(robot_software)
+set(CMAKE_BUILD_TYPE Release)
 
 # 检查并设置C++20
 set(CMAKE_CXX_STANDARD 20)
@@ -25,6 +26,9 @@ find_package(rclcpp REQUIRED)
 find_package(custom_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(pinocchio REQUIRED)
@@ -33,6 +37,8 @@ find_package(TBB REQUIRED)
 find_package(aligator REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
 find_package(rosbag2_storage REQUIRED)
+find_package(proxsuite REQUIRED)
+
 # find_package(Eigen3 3.4 REQUIRED NO_MOUDLE)
 
 file(GLOB_RECURSE source
@@ -73,6 +79,9 @@ ament_target_dependencies(main_app
         geometry_msgs
         std_msgs
         message_filters
+        tf2
+        tf2_ros
+        tf2_geometry_msgs
 )
 
 target_link_libraries(main_app
@@ -81,6 +90,7 @@ target_link_libraries(main_app
         aligator::aligator
         rosbag2_cpp::rosbag2_cpp
         rosbag2_storage::rosbag2_storage
+        proxsuite::proxsuite
         # ungar::ungar
         )
 

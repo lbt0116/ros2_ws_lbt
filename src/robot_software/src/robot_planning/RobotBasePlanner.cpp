@@ -1,15 +1,51 @@
 #include "robot_software/robot_planning/RobotBasePlanner.h"
 
+#include "robot_software/robot_utils/DataTypes.hpp"
+
 namespace Galileo
 {
 RobotBasePlanner::RobotBasePlanner()
     : dataCenter(DataCenter::getInstance())
 {
-    
 }
 
 RobotBasePlanner::~RobotBasePlanner()
 {
+}
+
+Eigen::Quaterniond RobotBasePlanner::updateTargetQuaternion(const Eigen::Quaterniond& currentQuat,
+                                                            const Eigen::Vector3d& angularVel,
+                                                            double dt)
+{
+    // 将角速度转换为四元数变化率
+    Eigen::Quaterniond omega;
+    omega.w() = 0;
+    omega.vec() = angularVel;
+
+    // 计算四元数的导数: dq/dt = 1/2 * q * omega
+    Eigen::Quaterniond qDot;
+    qDot.w() = -0.5 * (omega.x() * currentQuat.x() + omega.y() * currentQuat.y() + omega.z() * currentQuat.z());
+    qDot.x() = 0.5
+               * (omega.w() * currentQuat.x() + omega.z() * currentQuat.y() - omega.y() * currentQuat.z()
+                  + omega.x() * currentQuat.w());
+    qDot.y() = 0.5
+               * (-omega.z() * currentQuat.x() + omega.w() * currentQuat.y() + omega.x() * currentQuat.z()
+                  + omega.y() * currentQuat.w());
+    qDot.z() = 0.5
+               * (omega.y() * currentQuat.x() - omega.x() * currentQuat.y() + omega.w() * currentQuat.z()
+                  + omega.z() * currentQuat.w());
+
+    // 使用欧拉积分计算下一时刻的四元数
+    Eigen::Quaterniond targetQuat;
+    targetQuat.w() = currentQuat.w() + qDot.w() * dt;
+    targetQuat.x() = currentQuat.x() + qDot.x() * dt;
+    targetQuat.y() = currentQuat.y() + qDot.y() * dt;
+    targetQuat.z() = currentQuat.z() + qDot.z() * dt;
+
+    // 归一化四元数
+    targetQuat.normalize();
+
+    return targetQuat;
 }
 
 void RobotBasePlanner::update_base_trajectory()
@@ -41,7 +77,7 @@ void RobotBasePlanner::update_base_trajectory()
 
     baseTrajectory.targetLinearVelocity = updateVelocity(baseTrajectory.targetLinearVelocity, v_d, 10);
 
-    baseTrajectory.targetPosition += v_d * 0.001;
+    baseTrajectory.targetPosition += baseTrajectory.targetLinearVelocity * 0.001;
 
     baseTrajectory.targetPosition(2) = std::clamp(baseTrajectory.targetPosition(2), 0.1, 0.6);
 
@@ -54,10 +90,12 @@ void RobotBasePlanner::update_base_trajectory()
 
     baseTrajectory.targetAngularVelocity = updateVelocity(baseTrajectory.targetAngularVelocity, w_d, 2);  // 5 rad/s^2
 
-    baseTrajectory.targetEulerAngles += w_d * 0.001;
+    // 更新目标四元数
 
-    baseTrajectory.targetEulerAngles(0) = std::clamp(baseTrajectory.targetEulerAngles(0), -2 * M_PI / 3, 2 * M_PI / 3);
-    baseTrajectory.targetEulerAngles(1) = std::clamp(baseTrajectory.targetEulerAngles(1), -2 * M_PI / 3, 2 * M_PI / 3);
+    baseTrajectory.targetQuaternion =
+        updateTargetQuaternion(baseTrajectory.targetQuaternion, baseTrajectory.targetAngularVelocity, 0.001);
+
+    // baseTrajectory.targetQuaternion = Eigen::AngleAxisd(M_PI / 2, Eigen::Vector3d::UnitZ());
 
     dataCenter.write(baseTrajectory);
 }

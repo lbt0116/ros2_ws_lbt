@@ -11,27 +11,102 @@ JointController::JointController()
 
 JointController::~JointController() = default;
 
+void JointController::setJacobian()
+{
+    double Link1 = 0.36;
+    double Link2 = 0.36;
+    double abd_offset = 0.08;
+
+    auto q = dataCenter_.read<robot_state::JointState>()->jointPosition.transpose();
+    auto dq = dataCenter_.read<robot_state::JointState>()->jointVelocity.transpose();
+    for (int i = 0; i < 2; i++)
+    {
+        Jacobian[i](0, 0) = 0;
+        Jacobian[i](0, 1) = Link1 * cos(q(i, 1)) + Link2 * cos(q(i, 1) + q(i, 2));
+        Jacobian[i](0, 2) = Link2 * cos(q(i, 1) + q(i, 2));
+
+        Jacobian[i](1, 0) =
+            (Link2 * cos(q(i, 1) + q(i, 2)) + Link1 * cos(q(i, 1))) * cos(q(i, 0)) + abd_offset * sin(q(i, 0));
+        Jacobian[i](1, 1) = -(Link2 * sin(q(i, 1) + q(i, 2)) + Link1 * sin(q(i, 1))) * sin(q(i, 0));
+        Jacobian[i](1, 2) = -Link2 * sin(q(i, 1) + q(i, 2)) * sin(q(i, 0));
+
+        Jacobian[i](2, 0) =
+            (Link2 * cos(q(i, 1) + q(i, 2)) + Link1 * cos(q(i, 1))) * sin(q(i, 0)) - abd_offset * cos(q(i, 0));
+        Jacobian[i](2, 1) = (Link2 * sin(q(i, 1) + q(i, 2)) + Link1 * sin(q(i, 1))) * cos(q(i, 0));
+        Jacobian[i](2, 2) = Link2 * sin(q(i, 1) + q(i, 2)) * cos(q(i, 0));
+
+        dJacobian[i](0, 0) = 0;
+        dJacobian[i](0, 1) = -dq(1) * Link1 * sin(q(1)) - Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2));
+        dJacobian[i](0, 2) = -Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2));
+
+        dJacobian[i](1, 0) = dq(0) * abd_offset * cos(q(0))
+                             - cos(q(0)) * (dq(1) * Link1 * sin(q(1)) + Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * sin(q(0)) * (Link2 * cos(q(1) + q(2)) + Link1 * cos(q(1)));
+        dJacobian[i](1, 1) = -sin(q(0)) * (dq(1) * Link1 * cos(q(1)) + Link2 * cos(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * cos(q(0)) * (Link2 * sin(q(1) + q(2)) + Link1 * sin(q(1)));
+        dJacobian[i](1, 2) =
+            -Link2 * cos(q(1) + q(2)) * sin(q(0)) * (dq(1) + dq(2)) - dq(0) * Link2 * sin(q(1) + q(2)) * cos(q(0));
+
+        dJacobian[i](2, 0) = dq(0) * cos(q(0)) * (Link2 * cos(q(1) + q(2)) + Link1 * cos(q(1)))
+                             - sin(q(0)) * (dq(1) * Link1 * sin(q(1)) + Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2)))
+                             + dq(0) * abd_offset * sin(q(0));
+        dJacobian[i](2, 1) = cos(q(0)) * (dq(1) * Link1 * cos(q(1)) + Link2 * cos(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * sin(q(0)) * (Link2 * sin(q(1) + q(2)) + Link1 * sin(q(1)));
+        dJacobian[i](2, 2) =
+            Link2 * cos(q(1) + q(2)) * cos(q(0)) * (dq(1) + dq(2)) - dq(0) * Link2 * sin(q(1) + q(2)) * sin(q(0));
+    }
+    for (int i = 2; i < 4; i++)
+    {
+        Jacobian[i](0, 0) = 0;
+        Jacobian[i](0, 1) = Link1 * cos(q(i, 1)) + Link2 * cos(q(i, 1) + q(i, 2));
+        Jacobian[i](0, 2) = Link2 * cos(q(i, 1) + q(i, 2));
+
+        Jacobian[i](1, 0) =
+            (Link2 * cos(q(i, 1) + q(i, 2)) + Link1 * cos(q(i, 1))) * cos(q(i, 0)) - abd_offset * sin(q(i, 0));
+        Jacobian[i](1, 1) = -(Link2 * sin(q(i, 1) + q(i, 2)) + Link1 * sin(q(i, 1))) * sin(q(i, 0));
+        Jacobian[i](1, 2) = -Link2 * sin(q(i, 1) + q(i, 2)) * sin(q(i, 0));
+
+        Jacobian[i](2, 0) =
+            (Link2 * cos(q(i, 1) + q(i, 2)) + Link1 * cos(q(i, 1))) * sin(q(i, 0)) + abd_offset * cos(q(i, 0));
+        Jacobian[i](2, 1) = (Link2 * sin(q(i, 1) + q(i, 2)) + Link1 * sin(q(i, 1))) * cos(q(i, 0));
+        Jacobian[i](2, 2) = Link2 * sin(q(i, 1) + q(i, 2)) * cos(q(i, 0));
+
+        dJacobian[i](0, 0) = 0;
+        dJacobian[i](0, 1) = -dq(1) * Link1 * sin(q(1)) - Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2));
+        dJacobian[i](0, 2) = -Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2));
+
+        dJacobian[i](1, 0) = -dq(0) * abd_offset * cos(q(0))
+                             - cos(q(0)) * (dq(1) * Link1 * sin(q(1)) + Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * sin(q(0)) * (Link2 * cos(q(1) + q(2)) + Link1 * cos(q(1)));
+        dJacobian[i](1, 1) = -sin(q(0)) * (dq(1) * Link1 * cos(q(1)) + Link2 * cos(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * cos(q(0)) * (Link2 * sin(q(1) + q(2)) + Link1 * sin(q(1)));
+        dJacobian[i](1, 2) =
+            -Link2 * cos(q(1) + q(2)) * sin(q(0)) * (dq(1) + dq(2)) - dq(0) * Link2 * sin(q(1) + q(2)) * cos(q(0));
+
+        dJacobian[i](2, 0) = dq(0) * cos(q(0)) * (Link2 * cos(q(1) + q(2)) + Link1 * cos(q(1)))
+                             - sin(q(0)) * (dq(1) * Link1 * sin(q(1)) + Link2 * sin(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * abd_offset * sin(q(0));
+        dJacobian[i](2, 1) = cos(q(0)) * (dq(1) * Link1 * cos(q(1)) + Link2 * cos(q(1) + q(2)) * (dq(1) + dq(2)))
+                             - dq(0) * sin(q(0)) * (Link2 * sin(q(1) + q(2)) + Link1 * sin(q(1)));
+        dJacobian[i](2, 2) =
+            Link2 * cos(q(1) + q(2)) * cos(q(0)) * (dq(1) + dq(2)) - dq(0) * Link2 * sin(q(1) + q(2)) * sin(q(0));
+    }
+}
+
 void JointController::run()
 {
-    // 获取关节位置、速度、力矩
-    auto q = dataCenter_.read<robot_state::JointState>()->jointPosition;
-    auto dq = dataCenter_.read<robot_state::JointState>()->jointVelocity;
-
-    auto q_des = dataCenter_.read<robot_target_trajectory::TargetJointTrajectory>()->targetJointPosition;
-    auto dq_des = dataCenter_.read<robot_target_trajectory::TargetJointTrajectory>()->targetJointVelocity;
-
-    mat34 tau = kp.cwiseProduct(q_des - q) + kd.cwiseProduct(dq_des - dq);
-
+    setJacobian();
     compose_leg_force();
     compute_joint_torque();
 
-    // std::cout << "tau: " << jointController_.tau << std::endl;
+    std::cout << "tau: " << jointController_.tau << std::endl;
     // std::cout << "joint pd tau: " << tau << std::endl;
     // std::cout << "composedLegForce: " << jointController_.composedLegForce << std::endl;
 }
 void JointController::compose_leg_force()
 {
     auto f_st = dataCenter_.read<robot_controller::BallanceController>()->f;
+    // auto f_st = dataCenter_.read<robot_controller::GeoController>()->f;
     auto f_sw = dataCenter_.read<robot_controller::SwingLegController>()->f;
     auto phase = dataCenter_.read<robot_FSM::legState>()->legPhase;
 
@@ -53,9 +128,7 @@ void JointController::compute_joint_torque()
     for (int i = 0; i < 4; i++)
     {
         t += jacobian[i].topRows(3).transpose() * jointController_.composedLegForce.col(i);
-        // std::cout << "t" << i << "  " << jacobian[i].topRows(3).transpose() *
-        // jointController_.composedLegForce.col(i)
-        //           << std::endl;
+        // jointController_.tau.col(i) = Jacobian[i].transpose() * jointController_.composedLegForce.col(i);
     }
     jointController_.tau = Eigen::Map<Eigen::Matrix<double, 3, 4>>(t.tail(12).data());
     dataCenter_.write(jointController_);
@@ -96,7 +169,7 @@ custom_msgs::msg::ActuatorCmds JointController::publishActuatorCmds()
         {
             msg.torque[i] = jointController_.tau(i);
             // msg.torque[i] = 0;
-            msg.torque_limit[i] = 100.0;
+            msg.torque_limit[i] = 200.0;
             msg.pos_limit[i] = 3.14;  // pi弧度
             msg.pos[i] = 0.0;
             msg.vel[i] = 0.0;
@@ -107,7 +180,7 @@ custom_msgs::msg::ActuatorCmds JointController::publishActuatorCmds()
         {
             msg.torque[i] = 0;
             // msg.torque[i] = 0;
-            msg.torque_limit[i] = 100.0;
+            msg.torque_limit[i] = 200.0;
             msg.pos_limit[i] = 3.14;  // pi弧度
             msg.pos[i] = 0.0;
             msg.vel[i] = 0.0;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(mujoco_node)
-
+set(CMAKE_BUILD_TYPE Release)
 # 设置 C++20 标准
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     add_compile_options(-Wall -Wextra -Wpedantic)

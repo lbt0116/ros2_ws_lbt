@@ -1,0 +1,10 @@
+{
+    "names": {
+        "*": {
+            "cmake-args": [
+                "-DCMAKE_C_COMPILER=gcc-13",
+                "-DCMAKE_CXX_COMPILER=g++-13"
+            ]
+        }
+    }
+} 

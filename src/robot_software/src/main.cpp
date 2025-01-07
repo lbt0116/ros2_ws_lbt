@@ -14,7 +14,8 @@
 
 #include "robot_software/robot_FSM/RobotFSMNode.h"
 #include "robot_software/robot_controller/RobotControllerNode.h"
-#include "robot_software/robot_controller/nmpc_controller/NmpcDdpCtrlNode.h"
+#include "robot_software/robot_controller/nmpc_controller/GeometricNmpcNode.h"
+// #include "robot_software/robot_controller/nmpc_controller/NmpcDdpCtrlNode.h"
 #include "robot_software/robot_estimator/RobotEstimatorNode.h"
 #include "robot_software/robot_interface/MujocoInterfaceNode.h"
 #include "robot_software/robot_interface/PinocchioInterfaceNode.h"
@@ -43,6 +44,7 @@ int main(int argc, char* argv[])
     const auto RobotControllerNode = std::make_shared<Galileo::RobotControllerNode>();
     const auto UserInterfaceNode = std::make_shared<Galileo::UserInterfaceNode>();
     const auto RobotRecordNode = std::make_shared<Galileo::RobotRecordNode>();
+    const auto GeometricNmpcNode = std::make_shared<Galileo::GeometricNmpcNode>();
     // 添加节点到执行器
     main_executor.add_node(RobotInterfaceNode);
     main_executor.add_node(PinocchioInterfaceNode);
@@ -54,7 +56,7 @@ int main(int argc, char* argv[])
     // 添加用户交互节点到多线程执行器
     user_executor.add_node(UserInterfaceNode);
     user_executor.add_node(RobotRecordNode);
-
+    user_executor.add_node(GeometricNmpcNode);
     // 创建一个线程来运行用户交互执行器
     std::thread user_thread([&]() { user_executor.spin(); });
 

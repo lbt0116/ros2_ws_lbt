@@ -13,6 +13,7 @@ using mat43 = Eigen::Matrix<double, 4, 3>;
 using mat33 = Eigen::Matrix<double, 3, 3>;
 using mat66 = Eigen::Matrix<double, 6, 6>;
 using mat34 = Eigen::Matrix<double, 3, 4>;
+using mat44 = Eigen::Matrix<double, 4, 4>;
 using matxd = Eigen::MatrixXd;
 using vecxd = Eigen::VectorXd;
 

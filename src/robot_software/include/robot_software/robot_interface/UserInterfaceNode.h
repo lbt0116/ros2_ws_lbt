@@ -35,8 +35,8 @@ private:
     // 仿真开始定时器
     rclcpp::TimerBase::SharedPtr simulationTimer_;
     // 用户交互数据更新回调
-    void userDataCallback();
+    void user_data_callback();
     // 仿真开始回调
-    void simulationCallback();
+    void simulation_callback();
 };
 }  // namespace Galileo

@@ -41,7 +41,6 @@ private:
     std::unique_ptr<BallanceController> ballanceController_;
     std::unique_ptr<SwingLegController> swingLegController_;
     std::unique_ptr<JointController> jointController_;
-
     // 动态参数回调函数
     rclcpp::Subscription<rcl_interfaces::msg::ParameterEvent>::SharedPtr parameter_event_sub_;  // 订阅者
 
