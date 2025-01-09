@@ -26,6 +26,13 @@ def generate_launch_description():
             name='MujocoMsgHandler',
             output='screen'
         ),
+        # robot hardware node
+        Node(
+            package='robot_hardware',
+            executable='robot_hardware_node',
+            name='RobotHardwareNode',
+            output='screen'
+        ),
         # main node
         Node(
             package='robot_software',
@@ -45,7 +52,7 @@ def generate_launch_description():
             output='screen'
         ),
         ExecuteProcess(
-            cmd=['terminator', '-x', 'ros2', 'run', 'foxglove_bridge', 'foxglove_bridge'],
+            cmd=['gnome-terminal', '-x', 'ros2', 'run', 'foxglove_bridge', 'foxglove_bridge'],
             output='screen'
         )
     ])

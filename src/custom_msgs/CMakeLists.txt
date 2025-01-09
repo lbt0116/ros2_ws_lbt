@@ -20,6 +20,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
         "msg/ActuatorCmds.msg"
         "msg/ToUiMsg.msg"
         "msg/ToSimMsg.msg" 
+        "msg/hardware_msg/LowState.msg"
+        "msg/hardware_msg/LowCmd.msg"
+        "msg/hardware_msg/MotorCmd.msg"
+        "msg/hardware_msg/MotorState.msg"
+        "msg/hardware_msg/MotorError.msg"
+        "msg/hardware_msg/Instruction.msg"
+        "msg/hardware_msg/RobotError.msg"
         DEPENDENCIES std_msgs sensor_msgs geometry_msgs
 )
 if (BUILD_TESTING)
