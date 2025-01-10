@@ -76,6 +76,7 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
     quat.setRPY(eulerAngles(0), eulerAngles(1), 0);
 
     q.block(0, 0, 3, 1).setZero();
+    
     // q(3) = quat.x();
     // q(4) = quat.y();
     // q(5) = quat.z();
@@ -85,6 +86,7 @@ void PinocchioInterfaceNode::PinocchioInterfaceImpl::update_pinocchio(PinocchioI
     q(4) = sensorData->imuQuant.y();
     q(5) = sensorData->imuQuant.z();
     q(6) = sensorData->imuQuant.w();
+
     for (int i = 0; i < 4; i++)
     {
         q.block(7 + 3 * i, 0, 3, 1) = sensorData->jointPosition.col(i);
